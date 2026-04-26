@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UML Java Designer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Syne',sans-serif;background:#080810;color:#EEEDFE;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+  #topbar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#0f0c1e;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid #2a1f5e}
+  #topbar-title{font-size:15px;font-weight:700;background:linear-gradient(90deg,#AFA9EC,#7F77DD,#534AB7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-right:4px;flex-shrink:0;letter-spacing:0.02em}
+  .tb-sep{width:1px;height:20px;background:rgba(175,169,236,0.2);margin:0 3px;flex-shrink:0}
+  .tb-btn{font-size:12px;padding:5px 11px;border-radius:6px;border:1px solid rgba(175,169,236,0.2);cursor:pointer;font-weight:500;flex-shrink:0;background:rgba(175,169,236,0.07);color:#AFA9EC;font-family:'Syne',sans-serif;transition:all 0.15s}
+  .tb-btn:hover{background:rgba(175,169,236,0.18);color:#EEEDFE;border-color:#7F77DD}
+  .tb-btn.active{background:#534AB7;color:#EEEDFE;border-color:#7F77DD}
+  .tb-btn.danger{background:rgba(162,45,45,0.2);color:#F09595;border-color:rgba(240,149,149,0.25)}
+  .tb-btn.danger:hover{background:#A32D2D;color:#fff}
+  .tb-btn.green{background:rgba(15,110,86,0.2);color:#9FE1CB;border-color:rgba(93,202,165,0.25)}
+  .tb-btn.green:hover{background:#0F6E56;color:#fff}
+  .tb-btn.amber{background:rgba(99,56,6,0.3);color:#FAC775;border-color:rgba(250,199,117,0.25)}
+  .tb-btn.amber:hover{background:#633806;color:#FAC775}
+  .tb-btn.violet{background:rgba(83,74,183,0.25);color:#CECBF6;border-color:rgba(127,119,221,0.35)}
+  .tb-btn.violet:hover{background:#534AB7;color:#fff}
+  #status{font-size:11px;color:#3C3489;margin-left:auto;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+
+  #body{display:flex;flex:1;overflow:hidden}
+  #left{width:172px;min-width:172px;background:linear-gradient(180deg,#1c1040 0%,#150d35 100%);border-right:1px solid #2a1f5e;display:flex;flex-direction:column;overflow-y:auto}
+  #right{width:196px;min-width:196px;background:linear-gradient(180deg,#1c1040 0%,#150d35 100%);border-left:1px solid #2a1f5e;display:flex;flex-direction:column;overflow-y:auto}
+
+  .panel-head{padding:9px 12px 6px;font-size:9px;font-weight:700;color:#534AB7;letter-spacing:0.12em;text-transform:uppercase;border-bottom:0.5px solid rgba(83,74,183,0.25);flex-shrink:0}
+  .add-btn{display:flex;align-items:center;gap:9px;padding:9px 12px;font-size:12px;font-weight:500;cursor:pointer;color:#CECBF6;border-bottom:0.5px solid rgba(83,74,183,0.15);transition:background 0.12s}
+  .add-btn:hover{background:rgba(175,169,236,0.1);color:#fff}
+  .add-btn .icon{width:23px;height:23px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;font-weight:700;font-family:'JetBrains Mono',monospace}
+  .ic-class{background:#3C3489;color:#CECBF6}
+  .ic-abs{background:#633806;color:#FAC775}
+  .ic-iface{background:#085041;color:#9FE1CB}
+  .rel-btn{display:flex;align-items:center;gap:9px;padding:8px 12px;font-size:12px;cursor:pointer;color:#CECBF6;border-bottom:0.5px solid rgba(83,74,183,0.15);transition:background 0.12s}
+  .rel-btn:hover{background:rgba(175,169,236,0.1);color:#fff}
+  .rel-btn.active-rel{background:rgba(127,119,221,0.18);color:#EEEDFE}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .leg-row{display:flex;align-items:center;gap:8px;padding:5px 12px;font-size:11px;color:#AFA9EC}
+  .leg-line{height:2px;width:22px;flex-shrink:0;border-radius:1px}
+  .leg-dash{height:0;width:22px;border-top:2px dashed;flex-shrink:0}
+  .vis-pill{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace}
+
+  /* glosario */
+  #glosario{flex-shrink:0;border-top:1px solid rgba(83,74,183,0.3);margin-top:auto}
+  .glos-head{display:flex;align-items:center;gap:7px;padding:9px 12px 7px;font-size:9px;font-weight:700;color:#534AB7;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-bottom:0.5px solid rgba(83,74,183,0.2);user-select:none}
+  .glos-head:hover{color:#AFA9EC}
+  .glos-body{display:none}
+  .glos-body.open{display:block}
+  .glos-item{padding:8px 12px;border-bottom:0.5px solid rgba(83,74,183,0.1)}
+  .glos-item-head{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#CECBF6;margin-bottom:3px}
+  .glos-item-desc{font-size:10px;color:#6B6492;line-height:1.5}
+  .glos-when{font-size:10px;color:#2B6044;margin-top:3px;font-style:italic}
+
+  #canvas{flex:1;position:relative;background:#080810;overflow:hidden;cursor:default}
+  #canvas::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(83,74,183,0.11) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+  svg#svg{width:100%;height:100%;position:relative}
+
+  #props{padding:12px;flex:1;overflow-y:auto}
+  .prop-label{font-size:9px;color:#534AB7;text-transform:uppercase;letter-spacing:0.08em;margin-top:10px;margin-bottom:3px;font-weight:700}
+  .prop-label:first-child{margin-top:0}
+  .prop-input,.prop-ta,.prop-sel{width:100%;font-size:12px;padding:6px 8px;border:1px solid rgba(83,74,183,0.35);border-radius:6px;background:rgba(0,0,0,0.4);color:#EEEDFE;font-family:'JetBrains Mono',monospace;outline:none;transition:border 0.15s}
+  .prop-input:focus,.prop-ta:focus{border-color:#7F77DD}
+  .prop-ta{resize:vertical;min-height:54px;line-height:1.6}
+  .prop-sel{cursor:pointer}
+  .del-btn{width:100%;margin-top:12px;padding:7px;font-size:12px;border-radius:6px;border:1px solid rgba(240,149,149,0.35);background:rgba(162,45,45,0.18);color:#F09595;cursor:pointer;font-weight:500;font-family:'Syne',sans-serif;transition:all 0.15s}
+  .del-btn:hover{background:#A32D2D;color:#fff}
+  .empty-msg{font-size:12px;color:#2a1f5e;text-align:center;padding:22px 12px;line-height:1.7}
+  .hint{font-size:10px;color:#3C3489;margin-top:3px;line-height:1.55;font-family:'JetBrains Mono',monospace}
+
+  .proj-item{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:12px;color:#CECBF6;border-bottom:0.5px solid rgba(83,74,183,0.12);cursor:pointer;transition:background 0.12s}
+  .proj-item:hover{background:rgba(175,169,236,0.08)}
+  .proj-item.active-proj{background:rgba(127,119,221,0.15);color:#EEEDFE}
+  .proj-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .proj-del{font-size:15px;color:#3C3489;cursor:pointer;padding:0 3px;border-radius:3px;flex-shrink:0}
+  .proj-del:hover{color:#F09595;background:rgba(162,45,45,0.2)}
+  .new-proj-row{padding:8px 10px;display:flex;gap:6px}
+  .new-proj-input{flex:1;font-size:12px;padding:5px 7px;border:1px solid rgba(83,74,183,0.35);border-radius:6px;background:rgba(0,0,0,0.4);color:#EEEDFE;font-family:'JetBrains Mono',monospace;outline:none}
+  .new-proj-input:focus{border-color:#7F77DD}
+  .new-proj-btn{font-size:11px;padding:5px 8px;border-radius:6px;border:1px solid rgba(83,74,183,0.4);background:rgba(83,74,183,0.15);color:#CECBF6;cursor:pointer;font-family:'Syne',sans-serif}
+  .new-proj-btn:hover{background:#534AB7;color:#fff}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:999;align-items:center;justify-content:center}
+  .modal-box{background:#0f0c1e;border:1px solid #3C3489;border-radius:12px;width:660px;max-height:84vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal-sm{width:380px}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #2a1f5e;flex-shrink:0}
+  .modal-head span{font-size:14px;font-weight:600;color:#CECBF6}
+  .modal-close{background:none;border:none;color:#534AB7;cursor:pointer;font-size:22px;line-height:1}
+  .modal-close:hover{color:#AFA9EC}
+  .modal-body{flex:1;overflow:auto;padding:16px}
+  .modal-foot{padding:11px 18px;border-top:1px solid #2a1f5e;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+  .m-btn{padding:7px 16px;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:500;border:none}
+  .m-btn.sec{border:1px solid rgba(175,169,236,0.3);background:rgba(175,169,236,0.1);color:#AFA9EC}
+  .m-btn.sec:hover{background:rgba(175,169,236,0.2)}
+  .m-btn.pri{background:#534AB7;color:#fff}
+  .m-btn.pri:hover{background:#7F77DD}
+  .m-btn.grn{background:#0F6E56;color:#fff}
+  .m-btn.grn:hover{background:#1D9E75}
+
+  #code-in{width:100%;min-height:250px;background:rgba(0,0,0,0.5);color:#CECBF6;border:1px solid rgba(83,74,183,0.4);border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;outline:none;resize:vertical}
+  #code-in:focus{border-color:#7F77DD}
+  .parse-info{font-size:11px;margin-top:8px;line-height:1.5;font-family:'JetBrains Mono',monospace;color:#2B6044}
+  .parse-err{color:#A32D2D !important}
+
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#2a1f5e;border-radius:2px}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span id="topbar-title">UML Java Designer</span>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="addClass('class')">+ Clase</button>
+  <button class="tb-btn" onclick="addClass('abstract')">+ Abstracta</button>
+  <button class="tb-btn" onclick="addClass('interface')">+ Interfaz</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="rel-tb-btn" onclick="cycleRelMode()">Relación: ninguna</button>
+  <button class="tb-btn danger" onclick="deleteSelected()">Eliminar</button>
+  <button class="tb-btn" onclick="clearAll()" style="color:#AFA9EC">Limpiar</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn violet" onclick="openModal('code-in-modal')">📥 Código → Diagrama</button>
+  <button class="tb-btn green" onclick="openCodeOutModal()">📤 Ver código Java</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn amber" onclick="saveCurrentProject()">💾 Guardar</button>
+  <button class="tb-btn" onclick="promptNewProject()" style="color:#AFA9EC">Nuevo proyecto</button>
+  <span id="status">Sin selección</span>
+</div>
+
+<div id="body">
+  <div id="left">
+    <div class="panel-head">Agregar clase</div>
+    <div class="add-btn" onclick="addClass('class')"><div class="icon ic-class">C</div>Clase</div>
+    <div class="add-btn" onclick="addClass('abstract')"><div class="icon ic-abs">A</div>Abstracta</div>
+    <div class="add-btn" onclick="addClass('interface')"><div class="icon ic-iface">I</div>Interfaz</div>
+
+    <div class="panel-head" style="margin-top:4px">Relaciones</div>
+    <div class="rel-btn active-rel" id="rb-none" onclick="setRel(null)"><div class="dot" style="background:#2a1f5e"></div>Ninguna</div>
+    <div class="rel-btn" id="rb-inherit" onclick="setRel('inherit')"><div class="dot" style="background:#534AB7"></div>Herencia</div>
+    <div class="rel-btn" id="rb-implement" onclick="setRel('implement')"><div class="dot" style="background:#0F6E56"></div>Implementa</div>
+    <div class="rel-btn" id="rb-assoc" onclick="setRel('assoc')"><div class="dot" style="background:#378ADD"></div>Asociación</div>
+    <div class="rel-btn" id="rb-compose" onclick="setRel('compose')"><div class="dot" style="background:#E24B4A"></div>Composición</div>
+
+    <div class="panel-head" style="margin-top:4px">Leyenda flechas</div>
+    <div class="leg-row"><div class="leg-line" style="background:#534AB7"></div>herencia</div>
+    <div class="leg-row"><div class="leg-dash" style="border-color:#0F6E56"></div>implementa</div>
+    <div class="leg-row"><div class="leg-line" style="background:#378ADD"></div>asociación</div>
+    <div class="leg-row"><div class="leg-line" style="background:#E24B4A"></div>composición</div>
+
+    <div class="panel-head" style="margin-top:4px">Visibilidad</div>
+    <div class="leg-row"><span class="vis-pill" style="background:#0C447C;color:#B5D4F4">+</span>public</div>
+    <div class="leg-row"><span class="vis-pill" style="background:#791F1F;color:#F7C1C1">-</span>private</div>
+    <div class="leg-row"><span class="vis-pill" style="background:#27500A;color:#C0DD97">#</span>protected</div>
+
+    <div id="glosario">
+      <div class="glos-head" onclick="toggleGlosario()">
+        <span>📖</span>&nbsp;Glosario
+        <span id="glos-arrow" style="margin-left:auto;font-size:10px">▼</span>
+      </div>
+      <div class="glos-body" id="glos-body">
+        <div class="glos-item">
+          <div class="glos-item-head"><div class="dot" style="background:#534AB7"></div>Herencia</div>
+          <div class="glos-item-desc">Una clase "hija" recibe todos los atributos y funciones de la clase "padre".</div>
+          <div class="glos-when">📌 Ej: Perro es un Animal.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div class="dot" style="background:#0F6E56"></div>Implementa</div>
+          <div class="glos-item-desc">Una clase cumple el "contrato" de una interfaz, definiendo sus funciones obligatorias.</div>
+          <div class="glos-when">📌 Ej: Perro puede Nadar.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div class="dot" style="background:#378ADD"></div>Asociación</div>
+          <div class="glos-item-desc">Una clase usa o conoce a otra, pero ambas existen de forma independiente.</div>
+          <div class="glos-when">📌 Ej: Alumno usa un Aula.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div class="dot" style="background:#E24B4A"></div>Composición</div>
+          <div class="glos-item-desc">Una clase "contiene" a otra. Si el padre se elimina, el hijo también desaparece.</div>
+          <div class="glos-when">📌 Ej: Casa tiene Habitaciones.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="canvas">
+    <svg id="svg">
+      <defs>
+        <marker id="mh-purple" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0,10 4,0 8" fill="none" stroke="#7F77DD" stroke-width="1.5"/></marker>
+        <marker id="mh-teal" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0,10 4,0 8" fill="none" stroke="#1D9E75" stroke-width="1.5"/></marker>
+        <marker id="mh-blue" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#378ADD"/></marker>
+        <marker id="mh-red" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#E24B4A"/></marker>
+      </defs>
+      <g id="al"></g>
+      <g id="cl"></g>
+    </svg>
+  </div>
+
+  <div id="right">
+    <div class="panel-head">Proyectos guardados</div>
+    <div class="new-proj-row">
+      <input class="new-proj-input" id="new-proj-name" placeholder="Nombre..." onkeydown="if(event.key==='Enter')createProject()"/>
+      <button class="new-proj-btn" onclick="createProject()">+ Crear</button>
+    </div>
+    <div id="proj-list"></div>
+    <div class="panel-head" style="margin-top:4px">Propiedades</div>
+    <div id="props"><div class="empty-msg">Hacé clic en una clase para editar</div></div>
+  </div>
+</div>
+
+<!-- Modal código salida -->
+<div class="modal-bg" id="code-out-modal">
+  <div class="modal-box">
+    <div class="modal-head"><span>📤 Código Java generado</span><button class="modal-close" onclick="closeModal('code-out-modal')">&#215;</button></div>
+    <pre id="code-out" class="modal-body" style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.75;color:#CECBF6;background:#080810;margin:0"></pre>
+    <div class="modal-foot">
+      <button class="m-btn sec" onclick="copyCode()">Copiar</button>
+      <button class="m-btn pri" onclick="closeModal('code-out-modal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal código entrada -->
+<div class="modal-bg" id="code-in-modal">
+  <div class="modal-box">
+    <div class="modal-head"><span>📥 Código → Diagrama</span><button class="modal-close" onclick="closeModal('code-in-modal')">&#215;</button></div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:#AFA9EC;margin-bottom:10px;line-height:1.65">
+        Pegá tu código Java y se genera el diagrama automáticamente.<br>
+        <span style="color:#534AB7;font-size:11px">Detecta: clases, abstractas, interfaces, extends, implements, atributos y funciones.</span>
+      </div>
+      <textarea id="code-in" placeholder="public class Animal {
+    private String nombre;
+    private int edad;
+
+    public String getNombre() { }
+    public void hacerSonido() { }
+}
+
+public class Perro extends Animal {
+    private String raza;
+
+    public void ladrar() { }
+}
+
+public interface Nadador {
+    public void nadar();
+}"></textarea>
+      <div id="parse-info" class="parse-info"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="m-btn sec" onclick="closeModal('code-in-modal')">Cancelar</button>
+      <button class="m-btn grn" onclick="parseCodeToDiagram()">⚡ Generar diagrama</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nuevo proyecto -->
+<div class="modal-bg" id="new-proj-modal">
+  <div class="modal-box modal-sm">
+    <div class="modal-head"><span>Nuevo proyecto</span><button class="modal-close" onclick="closeModal('new-proj-modal')">&#215;</button></div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:#AFA9EC;margin-bottom:8px">Nombre del proyecto:</div>
+      <input class="prop-input" id="modal-proj-name" placeholder="Ej: Sistema de ventas" onkeydown="if(event.key==='Enter')confirmNewProject()"/>
+      <div style="font-size:11px;color:#3C3489;margin-top:8px">El diagrama actual se guarda primero.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="m-btn sec" onclick="closeModal('new-proj-modal')">Cancelar</button>
+      <button class="m-btn pri" onclick="confirmNewProject()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="display:none;position:fixed;bottom:20px;right:20px;background:#3C3489;color:#EEEDFE;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;border:1px solid #7F77DD;transition:opacity 0.3s"></div>
+
+<script>
+let classes=[],relations=[],selId=null,relMode=null,relFrom=null,drag=null,nid=1;
+let currentProject=null;
+const STORAGE_KEY='uml-java-v2';
+
+const svg=document.getElementById('svg');
+const al=document.getElementById('al');
+const cl=document.getElementById('cl');
+const props=document.getElementById('props');
+const statusEl=document.getElementById('status');
+const relTbBtn=document.getElementById('rel-tb-btn');
+
+const REL_CFG={
+  inherit:{stroke:'#7F77DD',dash:'',marker:'mh-purple',label:'herencia'},
+  implement:{stroke:'#1D9E75',dash:'6,3',marker:'mh-teal',label:'implementa'},
+  assoc:{stroke:'#378ADD',dash:'',marker:'mh-blue',label:'asociación'},
+  compose:{stroke:'#E24B4A',dash:'',marker:'mh-red',label:'composición'}
+};
+const TYPE_CFG={
+  class:{hdr:'#3C3489',hdrMid:'#534AB7',badge:'C'},
+  abstract:{hdr:'#633806',hdrMid:'#854F0B',badge:'A'},
+  interface:{hdr:'#085041',hdrMid:'#0F6E56',badge:'I'}
+};
+
+function gR(id){return classes.find(c=>c.id===id)}
+function calcH(c){return 44+Math.max(1,c.attrs.length)*17+10+Math.max(1,c.funcs.length)*17+10}
+function openModal(id){document.getElementById(id).style.display='flex';}
+function closeModal(id){document.getElementById(id).style.display='none';}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';t.style.opacity='1';
+  clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.style.display='none',300);},2200);
+}
+
+// localStorage
+function getAllProjects(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');}catch{return{};}}
+function setAllProjects(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
+function saveProjectData(name){
+  const all=getAllProjects();
+  all[name]={classes:JSON.parse(JSON.stringify(classes)),relations:JSON.parse(JSON.stringify(relations)),nid,ts:Date.now()};
+  setAllProjects(all);
+}
+function loadProjectData(name){
+  const p=getAllProjects()[name];if(!p)return false;
+  classes=p.classes||[];relations=p.relations||[];nid=p.nid||1;return true;
+}
+function deleteProjectData(name){const all=getAllProjects();delete all[name];setAllProjects(all);}
+
+// proyectos UI
+function renderProjectList(){
+  const list=document.getElementById('proj-list');
+  const names=Object.keys(getAllProjects()).sort();
+  if(!names.length){list.innerHTML='<div class="empty-msg" style="padding:14px 12px">Sin proyectos aún</div>';return;}
+  list.innerHTML=names.map(n=>{
+    const safe=n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return`<div class="proj-item ${n===currentProject?'active-proj':''}" onclick="switchProject('${safe}')">
+      <span class="proj-name" title="${n}">${n}</span>
+      <span class="proj-del" title="Eliminar" onclick="event.stopPropagation();deleteProject('${safe}')">&#215;</span>
+    </div>`;
+  }).join('');
+}
+function switchProject(name){
+  if(name===currentProject)return;
+  if(currentProject)saveProjectData(currentProject);
+  if(!loadProjectData(name))return;
+  currentProject=name;selId=null;render();renderProps();renderProjectList();setStatus('Proyecto: '+name);
+}
+function createProject(){
+  const inp=document.getElementById('new-proj-name');
+  const name=inp.value.trim();if(!name)return;
+  if(currentProject)saveProjectData(currentProject);
+  classes=[];relations=[];selId=null;nid=1;currentProject=name;saveProjectData(name);inp.value='';
+  render();renderProps();renderProjectList();setStatus('Proyecto: '+name);
+}
+function deleteProject(name){
+  if(!confirm('¿Eliminar "'+name+'"?'))return;
+  deleteProjectData(name);
+  if(currentProject===name){
+    const rem=Object.keys(getAllProjects());
+    if(rem.length){loadProjectData(rem[0]);currentProject=rem[0];}
+    else{classes=[];relations=[];nid=1;currentProject=null;}
+    selId=null;render();renderProps();
+  }
+  renderProjectList();
+}
+function saveCurrentProject(){
+  if(!currentProject){promptNewProject();return;}
+  saveProjectData(currentProject);showToast('✓ Guardado: '+currentProject);
+}
+function promptNewProject(){
+  document.getElementById('modal-proj-name').value='';openModal('new-proj-modal');
+  setTimeout(()=>document.getElementById('modal-proj-name').focus(),120);
+}
+function confirmNewProject(){
+  const name=document.getElementById('modal-proj-name').value.trim();if(!name)return;
+  closeModal('new-proj-modal');
+  if(currentProject)saveProjectData(currentProject);
+  classes=[];relations=[];selId=null;nid=1;currentProject=name;saveProjectData(name);
+  render();renderProps();renderProjectList();setStatus('Proyecto: '+name);
+}
+setInterval(()=>{if(currentProject)saveProjectData(currentProject);},30000);
+
+// glosario
+function toggleGlosario(){
+  const b=document.getElementById('glos-body'),a=document.getElementById('glos-arrow');
+  b.classList.toggle('open');a.textContent=b.classList.contains('open')?'▲':'▼';
+}
+
+// clases
+function addClass(type){
+  const cv=document.getElementById('canvas');
+  const x=40+Math.random()*(cv.offsetWidth-260),y=40+Math.random()*(cv.offsetHeight-200);
+  const n={class:'MiClase',abstract:'ClaseAbstracta',interface:'MiInterfaz'};
+  classes.push({id:nid++,type,name:n[type],x,y,w:185,attrs:['-nombre: String'],funcs:['+getNombre(): String']});
+  render();selectClass(classes[classes.length-1].id);
+  if(currentProject)saveProjectData(currentProject);
+}
+function setRel(mode){
+  relMode=mode;relFrom=null;
+  document.querySelectorAll('.rel-btn').forEach(b=>b.classList.remove('active-rel'));
+  if(mode){
+    document.getElementById('rb-'+mode).classList.add('active-rel');
+    relTbBtn.textContent='Relación: '+REL_CFG[mode].label;relTbBtn.classList.add('active');
+    setStatus('Clic en clase origen');
+  } else {
+    document.getElementById('rb-none').classList.add('active-rel');
+    relTbBtn.textContent='Relación: ninguna';relTbBtn.classList.remove('active');
+    setStatus(currentProject?'Proyecto: '+currentProject:'Sin selección');
+  }
+}
+let relCycle=['inherit','implement','assoc','compose',null],relIdx=-1;
+function cycleRelMode(){relIdx=(relIdx+1)%relCycle.length;setRel(relCycle[relIdx]);}
+function setStatus(t){statusEl.textContent=t;}
+function selectClass(id){selId=id;render();renderProps();setStatus(id?'Clase: '+gR(id)?.name:(currentProject?'Proyecto: '+currentProject:'Sin selección'));}
+function deleteSelected(){
+  if(selId===null)return;
+  classes=classes.filter(c=>c.id!==selId);relations=relations.filter(r=>r.from!==selId&&r.to!==selId);
+  selId=null;render();renderProps();setStatus(currentProject?'Proyecto: '+currentProject:'Sin selección');
+  if(currentProject)saveProjectData(currentProject);
+}
+function clearAll(){
+  if(!confirm('¿Limpiar todo el diagrama?'))return;
+  classes=[];relations=[];selId=null;render();renderProps();
+  if(currentProject)saveProjectData(currentProject);
+}
+
+// render
+function render(){al.innerHTML='';cl.innerHTML='';relations.forEach(r=>renderArrow(r));classes.forEach(c=>renderClass(c));}
+function edgePoint(cls,ox,oy){
+  const h=calcH(cls),cx=cls.x+cls.w/2,cy=cls.y+h/2,dx=ox-cx,dy=oy-cy;
+  if(Math.abs(dx)<0.01&&Math.abs(dy)<0.01)return{x:cx,y:cy};
+  const sx=cls.w/2,sy=h/2,tx=Math.abs(dx)/sx,ty=Math.abs(dy)/sy;
+  if(tx>ty){const t=sx/Math.abs(dx);return{x:cx+dx*t,y:cy+dy*t};}
+  else{const t=sy/Math.abs(dy);return{x:cx+dx*t,y:cy+dy*t};}
+}
+function renderArrow(r){
+  const a=gR(r.from),b=gR(r.to);if(!a||!b)return;
+  const acx=a.x+a.w/2,acy=a.y+calcH(a)/2,ep=edgePoint(b,acx,acy);
+  const cfg=REL_CFG[r.type];
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',acx);line.setAttribute('y1',acy);line.setAttribute('x2',ep.x);line.setAttribute('y2',ep.y);
+  line.setAttribute('stroke',cfg.stroke);line.setAttribute('stroke-width','2');
+  if(cfg.dash)line.setAttribute('stroke-dasharray',cfg.dash);
+  line.setAttribute('marker-end','url(#'+cfg.marker+')');al.appendChild(line);
+}
+function mk(tag,attrs){
+  const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e;
+}
+function renderClass(cls){
+  const h=calcH(cls),cfg=TYPE_CFG[cls.type],g=mk('g',{});
+  g.style.cursor='move';g.dataset.id=cls.id;
+  if(selId===cls.id)
+    g.appendChild(mk('rect',{x:cls.x-5,y:cls.y-5,width:cls.w+10,height:h+10,rx:11,fill:'none',stroke:'#7F77DD','stroke-width':'1.5','stroke-dasharray':'5,3',opacity:'0.7'}));
+  g.appendChild(mk('rect',{x:cls.x,y:cls.y,width:cls.w,height:h,rx:8,fill:'#10091e',stroke:cfg.hdrMid,'stroke-width':'1.5'}));
+  g.appendChild(mk('rect',{x:cls.x,y:cls.y,width:cls.w,height:44,rx:8,fill:cfg.hdr}));
+  g.appendChild(mk('rect',{x:cls.x,y:cls.y+36,width:cls.w,height:8,fill:cfg.hdr}));
+  g.appendChild(mk('rect',{x:cls.x+8,y:cls.y+12,width:19,height:19,rx:5,fill:'rgba(255,255,255,0.13)'}));
+  const bTxt=mk('text',{x:cls.x+17.5,y:cls.y+25,'text-anchor':'middle'});
+  bTxt.setAttribute('style','font-size:11px;font-weight:700;fill:rgba(255,255,255,0.85);font-family:JetBrains Mono,monospace');
+  bTxt.textContent=cfg.badge;g.appendChild(bTxt);
+  if(cls.type!=='class'){
+    const sub=mk('text',{x:cls.x+cls.w/2,y:cls.y+17,'text-anchor':'middle'});
+    sub.setAttribute('style','font-size:9px;fill:rgba(255,255,255,0.55);font-family:Syne,sans-serif;letter-spacing:0.04em');
+    sub.textContent=cls.type==='interface'?'«interface»':'«abstract»';g.appendChild(sub);
+  }
+  const title=mk('text',{x:cls.x+cls.w/2,y:cls.y+(cls.type==='class'?30:36),'text-anchor':'middle'});
+  title.setAttribute('style','font-size:13px;font-weight:600;fill:#fff;font-family:Syne,sans-serif');
+  title.textContent=cls.name;g.appendChild(title);
+  g.appendChild(mk('line',{x1:cls.x,y1:cls.y+44,x2:cls.x+cls.w,y2:cls.y+44,stroke:cfg.hdrMid,'stroke-width':'1'}));
+  let ay=cls.y+44+14;
+  (cls.attrs.length?cls.attrs:['—']).forEach(a=>{
+    const t=mk('text',{x:cls.x+10,y:ay});
+    const col=a[0]==='-'?'#F09595':a[0]==='+'?'#85B7EB':a[0]==='#'?'#97C459':'#888780';
+    t.setAttribute('style','font-size:11px;fill:'+col+';font-family:JetBrains Mono,monospace');
+    t.textContent=a;g.appendChild(t);ay+=17;
+  });
+  ay+=2;
+  g.appendChild(mk('line',{x1:cls.x+8,y1:ay-6,x2:cls.x+cls.w-8,y2:ay-6,stroke:'rgba(127,119,221,0.25)','stroke-width':'1','stroke-dasharray':'3,3'}));
+  (cls.funcs.length?cls.funcs:['—']).forEach(f=>{
+    const t=mk('text',{x:cls.x+10,y:ay+6});
+    const col=f[0]==='-'?'#F09595':f[0]==='+'?'#85B7EB':f[0]==='#'?'#97C459':'#888780';
+    t.setAttribute('style','font-size:11px;fill:'+col+';font-family:JetBrains Mono,monospace');
+    t.textContent=f;g.appendChild(t);ay+=17;
+  });
+  g.addEventListener('mousedown',e=>onBoxDown(e,cls.id));cl.appendChild(g);
+}
+function onBoxDown(e,id){
+  e.stopPropagation();
+  if(relMode){
+    if(!relFrom){relFrom=id;setStatus('Ahora clic en la clase destino');}
+    else{
+      if(relFrom!==id){relations.push({from:relFrom,to:id,type:relMode});setRel(null);if(currentProject)saveProjectData(currentProject);}
+      else setRel(null);
+    }
+    render();return;
+  }
+  selectClass(id);const cls=gR(id);
+  drag={id,sx:e.clientX,sy:e.clientY,ox:cls.x,oy:cls.y};
+}
+svg.addEventListener('mousemove',e=>{
+  if(!drag)return;const cls=gR(drag.id);if(!cls)return;
+  cls.x=drag.ox+(e.clientX-drag.sx);cls.y=drag.oy+(e.clientY-drag.sy);render();
+});
+svg.addEventListener('mouseup',()=>{if(drag&&currentProject)saveProjectData(currentProject);drag=null;});
+svg.addEventListener('click',e=>{
+  if(e.target===svg||e.target.tagName==='svg'||e.target.id==='al'){
+    selId=null;render();renderProps();setStatus(currentProject?'Proyecto: '+currentProject:'Sin selección');
+  }
+});
+
+// props
+function renderProps(){
+  const cls=selId?gR(selId):null;
+  if(!cls){props.innerHTML='<div class="empty-msg">Hacé clic en una clase para editar</div>';return;}
+  const cfg=TYPE_CFG[cls.type];
+  props.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid rgba(83,74,183,0.3)">
+      <div style="width:28px;height:28px;border-radius:6px;background:${cfg.hdr};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace">${cfg.badge}</div>
+      <div style="font-size:13px;font-weight:600;color:#EEEDFE;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cls.name}</div>
+    </div>
+    <div class="prop-label">Nombre</div>
+    <input class="prop-input" value="${cls.name}" oninput="upd('name',this.value)"/>
+    <div class="prop-label">Tipo</div>
+    <select class="prop-sel" onchange="upd('type',this.value)">
+      <option value="class" ${cls.type==='class'?'selected':''}>Clase</option>
+      <option value="abstract" ${cls.type==='abstract'?'selected':''}>Abstracta</option>
+      <option value="interface" ${cls.type==='interface'?'selected':''}>Interfaz</option>
+    </select>
+    <div class="prop-label">Atributos</div>
+    <textarea class="prop-ta" oninput="updList('attrs',this.value)">${cls.attrs.join('\n')}</textarea>
+    <div class="hint">- nombre: String<br>+ valor: int<br># total: double</div>
+    <div class="prop-label">Funciones</div>
+    <textarea class="prop-ta" oninput="updList('funcs',this.value)">${cls.funcs.join('\n')}</textarea>
+    <div class="hint">+ getNombre(): String<br>- calcular(): void</div>
+    <button class="del-btn" onclick="deleteSelected()">Eliminar clase</button>
+  `;
+}
+function upd(f,v){const cls=gR(selId);if(!cls)return;cls[f]=v;render();setStatus('Clase: '+cls.name);if(currentProject)saveProjectData(currentProject);}
+function updList(f,v){const cls=gR(selId);if(!cls)return;cls[f]=v.split('\n').filter(l=>l.trim());render();if(currentProject)saveProjectData(currentProject);}
+
+// exportar código
+let lastCode='';
+function openCodeOutModal(){
+  let code='// Código generado por UML Java Designer\n';
+  if(currentProject)code+='// Proyecto: '+currentProject+'\n';
+  code+='\n';
+  classes.forEach(cls=>{
+    const rels=relations.filter(r=>r.from===cls.id);
+    const ext=rels.filter(r=>r.type==='inherit').map(r=>gR(r.to)?.name).filter(Boolean);
+    const impl=rels.filter(r=>r.type==='implement').map(r=>gR(r.to)?.name).filter(Boolean);
+    const kw=cls.type==='interface'?'interface':cls.type==='abstract'?'abstract class':'class';
+    let decl=`public ${kw} ${cls.name}`;
+    if(ext.length)decl+=` extends ${ext[0]}`;
+    if(impl.length)decl+=` implements ${impl.join(', ')}`;
+    code+=decl+' {\n\n';
+    cls.attrs.forEach(a=>{
+      const vis=a[0]==='-'?'private':a[0]==='+'?'public':a[0]==='#'?'protected':'private';
+      const rest=a.slice(1).trim().replace(/^(\w+):\s*(\w+)/,'$2 $1');
+      code+=`    ${vis} ${rest};\n`;
+    });
+    if(cls.attrs.length)code+='\n';
+    cls.funcs.forEach(f=>{
+      const vis=f[0]==='-'?'private':f[0]==='+'?'public':f[0]==='#'?'protected':'public';
+      const rest=f.slice(1).trim();
+      code+=`    ${vis} ${rest} {\n        // TODO: implementar\n    }\n\n`;
+    });
+    code+='}\n\n';
+  });
+  lastCode=code;
+  document.getElementById('code-out').textContent=code;openModal('code-out-modal');
+}
+function copyCode(){navigator.clipboard.writeText(lastCode).then(()=>{const b=event.target;const o=b.textContent;b.textContent='¡Copiado!';setTimeout(()=>b.textContent=o,1500);});}
+
+// CÓDIGO → DIAGRAMA
+function parseCodeToDiagram(){
+  const code=document.getElementById('code-in').value;
+  const info=document.getElementById('parse-info');
+  info.textContent='';info.className='parse-info';
+  const found=[];
+  const classRe=/(?:public\s+)?(?:(abstract)\s+)?(?:(class|interface))\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w\s,]+))?/g;
+  let m;
+  while((m=classRe.exec(code))!==null){
+    const type=m[2]==='interface'?'interface':m[1]?'abstract':'class';
+    const name=m[3],ext=m[4]||null;
+    const impls=m[5]?m[5].split(',').map(s=>s.trim()).filter(Boolean):[];
+    const start=code.indexOf('{',m.index);if(start===-1)continue;
+    let depth=1,i=start+1,block='';
+    while(i<code.length&&depth>0){if(code[i]==='{')depth++;else if(code[i]==='}')depth--;if(depth>0)block+=code[i];i++;}
+    const attrs=[];
+    const attrRe=/^\s*(private|public|protected)\s+(\w[\w<>,\[\]]*)\s+(\w+)\s*;/mg;
+    let am;
+    while((am=attrRe.exec(block))!==null){
+      const vis=am[1]==='private'?'-':am[1]==='public'?'+':'#';
+      attrs.push(`${vis}${am[3]}: ${am[2]}`);
+    }
+    const funcs=[];
+    const funcRe=/^\s*(private|public|protected)\s+(?:abstract\s+)?(\w[\w<>,\[\]]*)\s+(\w+)\s*\(([^)]*)\)/mg;
+    let fm;
+    while((fm=funcRe.exec(block))!==null){
+      const vis=fm[1]==='private'?'-':fm[1]==='public'?'+':'#';
+      funcs.push(`${vis}${fm[3]}(${fm[4].trim()}): ${fm[2]}`);
+    }
+    found.push({name,type,attrs,funcs,ext,impls});
+  }
+  if(!found.length){info.textContent='⚠ No se encontraron clases. Revisá la sintaxis.';info.className='parse-info parse-err';return;}
+  if(classes.length>0&&!confirm('¿Reemplazar el diagrama actual?'))return;
+  classes=[];relations=[];selId=null;nid=1;
+  const cols=Math.ceil(Math.sqrt(found.length));
+  found.forEach((f,idx)=>{
+    const col=idx%cols,row=Math.floor(idx/cols);
+    classes.push({id:nid++,type:f.type,name:f.name,x:40+col*220,y:60+row*220,w:185,attrs:f.attrs,funcs:f.funcs});
+  });
+  found.forEach(f=>{
+    const from=classes.find(c=>c.name===f.name);if(!from)return;
+    if(f.ext){const to=classes.find(c=>c.name===f.ext);if(to)relations.push({from:from.id,to:to.id,type:'inherit'});}
+    f.impls.forEach(iname=>{const to=classes.find(c=>c.name===iname);if(to)relations.push({from:from.id,to:to.id,type:'implement'});});
+  });
+  closeModal('code-in-modal');if(currentProject)saveProjectData(currentProject);
+  render();renderProjectList();showToast('✓ Diagrama generado: '+found.length+' clase(s)');
+}
+
+// init
+function init(){
+  const names=Object.keys(getAllProjects());
+  if(names.length){currentProject=names[0];loadProjectData(currentProject);setStatus('Proyecto: '+currentProject);}
+  else{
+    currentProject='Ejemplo Animal';
+    classes.push({id:nid++,type:'class',name:'Animal',x:40,y:80,w:185,attrs:['-nombre: String','-edad: int'],funcs:['+getNombre(): String','+hacerSonido(): void']});
+    classes.push({id:nid++,type:'abstract',name:'Vertebrado',x:260,y:80,w:185,attrs:['#columna: boolean'],funcs:['#respirar(): void']});
+    classes.push({id:nid++,type:'interface',name:'Nadador',x:480,y:80,w:185,attrs:[],funcs:['+nadar(): void']});
+    classes.push({id:nid++,type:'class',name:'Perro',x:150,y:310,w:185,attrs:['-raza: String','-duenio: String'],funcs:['+ladrar(): void','+getNombre(): String']});
+    relations.push({from:classes[1].id,to:classes[0].id,type:'inherit'});
+    relations.push({from:classes[3].id,to:classes[1].id,type:'inherit'});
+    relations.push({from:classes[3].id,to:classes[2].id,type:'implement'});
+    saveProjectData(currentProject);setStatus('Proyecto: '+currentProject);
+  }
+  setRel(null);render();renderProjectList();
+}
+init();
+</script>
+</body>  
+</html>
