@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UML Java Designer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Syne',sans-serif;background:#080810;color:#EEEDFE;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+  #topbar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#0f0c1e;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid #2a1f5e}
+  #topbar-title{font-size:15px;font-weight:700;background:linear-gradient(90deg,#AFA9EC,#7F77DD,#534AB7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-right:4px;flex-shrink:0;letter-spacing:0.02em}
+  .tb-sep{width:1px;height:20px;background:rgba(175,169,236,0.2);margin:0 3px;flex-shrink:0}
+  .tb-btn{font-size:12px;padding:5px 11px;border-radius:6px;border:1px solid rgba(175,169,236,0.2);cursor:pointer;font-weight:500;flex-shrink:0;background:rgba(175,169,236,0.07);color:#AFA9EC;font-family:'Syne',sans-serif;transition:all 0.15s}
+  .tb-btn:hover{background:rgba(175,169,236,0.18);color:#EEEDFE;border-color:#7F77DD}
+  .tb-btn.active{background:#534AB7;color:#EEEDFE;border-color:#7F77DD}
+  .tb-btn.danger{background:rgba(162,45,45,0.2);color:#F09595;border-color:rgba(240,149,149,0.25)}
+  .tb-btn.danger:hover{background:#A32D2D;color:#fff}
+  .tb-btn.green{background:rgba(15,110,86,0.2);color:#9FE1CB;border-color:rgba(93,202,165,0.25)}
+  .tb-btn.green:hover{background:#0F6E56;color:#fff}
+  .tb-btn.amber{background:rgba(99,56,6,0.3);color:#FAC775;border-color:rgba(250,199,117,0.25)}
+  .tb-btn.amber:hover{background:#633806;color:#FAC775}
+  .tb-btn.violet{background:rgba(83,74,183,0.25);color:#CECBF6;border-color:rgba(127,119,221,0.35)}
+  .tb-btn.violet:hover{background:#534AB7;color:#fff}
+  #status{font-size:11px;color:#3C3489;margin-left:auto;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+
+  #body{display:flex;flex:1;overflow:hidden}
+  #left{width:172px;min-width:172px;background:linear-gradient(180deg,#1c1040 0%,#150d35 100%);border-right:1px solid #2a1f5e;display:flex;flex-direction:column;overflow-y:auto}
+  #right{width:196px;min-width:196px;background:linear-gradient(180deg,#1c1040 0%,#150d35 100%);border-left:1px solid #2a1f5e;display:flex;flex-direction:column;overflow-y:auto}
+
+  .panel-head{padding:9px 12px 6px;font-size:9px;font-weight:700;color:#534AB7;letter-spacing:0.12em;text-transform:uppercase;border-bottom:0.5px solid rgba(83,74,183,0.25);flex-shrink:0}
+  .add-btn{display:flex;align-items:center;gap:9px;padding:9px 12px;font-size:12px;font-weight:500;cursor:pointer;color:#CECBF6;border-bottom:0.5px solid rgba(83,74,183,0.15);transition:background 0.12s}
+  .add-btn:hover{background:rgba(175,169,236,0.1);color:#fff}
+  .add-btn .icon{width:23px;height:23px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;font-weight:700;font-family:'JetBrains Mono',monospace}
+  .ic-class{background:#3C3489;color:#CECBF6}
+  .ic-abs{background:#633806;color:#FAC775}
+  .ic-iface{background:#085041;color:#9FE1CB}
+  .rel-btn{display:flex;align-items:center;gap:9px;padding:8px 12px;font-size:12px;cursor:pointer;color:#CECBF6;border-bottom:0.5px solid rgba(83,74,183,0.15);transition:background 0.12s}
+  .rel-btn:hover{background:rgba(175,169,236,0.1);color:#fff}
+  .rel-btn.active-rel{background:rgba(127,119,221,0.18);color:#EEEDFE}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .leg-row{display:flex;align-items:center;gap:8px;padding:5px 12px;font-size:11px;color:#AFA9EC}
+  .leg-line{height:2px;width:22px;flex-shrink:0;border-radius:1px}
+  .leg-dash{height:0;width:22px;border-top:2px dashed;flex-shrink:0}
+  .vis-pill{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace}
+
+  /* glosario */
+  #glosario{flex-shrink:0;border-top:1px solid rgba(83,74,183,0.3);margin-top:auto}
+  .glos-head{display:flex;align-items:center;gap:7px;padding:9px 12px 7px;font-size:9px;font-weight:700;color:#534AB7;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-bottom:0.5px solid rgba(83,74,183,0.2);user-select:none}
+  .glos-head:hover{color:#AFA9EC}
+  .glos-body{display:none}
+  .glos-body.open{display:block}
+  .glos-item{padding:8px 12px;border-bottom:0.5px solid rgba(83,74,183,0.1)}
+  .glos-item-head{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#CECBF6;margin-bottom:3px}
+  .glos-item-desc{font-size:10px;color:#6B6492;line-height:1.5}
+  .glos-when{font-size:10px;color:#2B6044;margin-top:3px;font-style:italic}
+
+  #canvas{flex:1;position:relative;background:#080810;overflow:hidden;cursor:default}
+  #canvas::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(83,74,183,0.11) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+  svg#svg{width:100%;height:100%;position:relative}
+
+  #props{padding:12px;flex:1;overflow-y:auto}
+  .prop-label{font-size:9px;color:#534AB7;text-transform:uppercase;letter-spacing:0.08em;margin-top:10px;margin-bottom:3px;font-weight:700}
+  .prop-label:first-child{margin-top:0}
+  .prop-input,.prop-ta,.prop-sel{width:100%;font-size:12px;padding:6px 8px;border:1px solid rgba(83,74,183,0.35);border-radius:6px;background:rgba(0,0,0,0.4);color:#EEEDFE;font-family:'JetBrains Mono',monospace;outline:none;transition:border 0.15s}
+  .prop-input:focus,.prop-ta:focus{border-color:#7F77DD}
+  .prop-ta{resize:vertical;min-height:54px;line-height:1.6}
+  .prop-sel{cursor:pointer}
+  .del-btn{width:100%;margin-top:12px;padding:7px;font-size:12px;border-radius:6px;border:1px solid rgba(240,149,149,0.35);background:rgba(162,45,45,0.18);color:#F09595;cursor:pointer;font-weight:500;font-family:'Syne',sans-serif;transition:all 0.15s}
+  .del-btn:hover{background:#A32D2D;color:#fff}
+  .empty-msg{font-size:12px;color:#2a1f5e;text-align:center;padding:22px 12px;line-height:1.7}
+  .hint{font-size:10px;color:#3C3489;margin-top:3px;line-height:1.55;font-family:'JetBrains Mono',monospace}
+
+  .proj-item{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:12px;color:#CECBF6;border-bottom:0.5px solid rgba(83,74,183,0.12);cursor:pointer;transition:background 0.12s}
+  .proj-item:hover{background:rgba(175,169,236,0.08)}
+  .proj-item.active-proj{background:rgba(127,119,221,0.15);color:#EEEDFE}
+  .proj-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .proj-del{font-size:15px;color:#3C3489;cursor:pointer;padding:0 3px;border-radius:3px;flex-shrink:0}
+  .proj-del:hover{color:#F09595;background:rgba(162,45,45,0.2)}
+  .new-proj-row{padding:8px 10px;display:flex;gap:6px}
+  .new-proj-input{flex:1;font-size:12px;padding:5px 7px;border:1px solid rgba(83,74,183,0.35);border-radius:6px;background:rgba(0,0,0,0.4);color:#EEEDFE;font-family:'JetBrains Mono',monospace;outline:none}
+  .new-proj-input:focus{border-color:#7F77DD}
+  .new-proj-btn{font-size:11px;padding:5px 8px;border-radius:6px;border:1px solid rgba(83,74,183,0.4);background:rgba(83,74,183,0.15);color:#CECBF6;cursor:pointer;font-family:'Syne',sans-serif}
+  .new-proj-btn:hover{background:#534AB7;color:#fff}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:999;align-items:center;justify-content:center}
+  .modal-box{background:#0f0c1e;border:1px solid #3C3489;border-radius:12px;width:660px;max-height:84vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal-sm{width:380px}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #2a1f5e;flex-shrink:0}
+  .modal-head span{font-size:14px;font-weight:600;color:#CECBF6}
+  .modal-close{background:none;border:none;color:#534AB7;cursor:pointer;font-size:22px;line-height:1}
+  .modal-close:hover{color:#AFA9EC}
+  .modal-body{flex:1;overflow:auto;padding:16px}
+  .modal-foot{padding:11px 18px;border-top:1px solid #2a1f5e;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+  .m-btn{padding:7px 16px;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:500;border:none}
+  .m-btn.sec{border:1px solid rgba(175,169,236,0.3);background:rgba(175,169,236,0.1);color:#AFA9EC}
+  .m-btn.sec:hover{background:rgba(175,169,236,0.2)}
+  .m-btn.pri{background:#534AB7;color:#fff}
+  .m-btn.pri:hover{background:#7F77DD}
+  .m-btn.grn{background:#0F6E56;color:#fff}
+  .m-btn.grn:hover{background:#1D9E75}
+
+  #code-in{width:100%;min-height:250px;background:rgba(0,0,0,0.5);color:#CECBF6;border:1px solid rgba(83,74,183,0.4);border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;outline:none;resize:vertical}
+  #code-in:focus{border-color:#7F77DD}
+  .parse-info{font-size:11px;margin-top:8px;line-height:1.5;font-family:'JetBrains Mono',monospace;color:#2B6044}
+  .parse-err{color:#A32D2D !important}
+
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#2a1f5e;border-radius:2px}
+
+  /* ── TABS ── */
+  #tab-bar{display:flex;align-items:center;gap:2px;padding:0 14px;background:#0a0818;border-bottom:1px solid #2a1f5e;flex-shrink:0}
+  .tab{padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;color:#534AB7;border-bottom:2px solid transparent;transition:all 0.15s;user-select:none;letter-spacing:0.02em}
+  .tab:hover{color:#AFA9EC}
+  .tab.active{color:#CECBF6;border-bottom-color:#7F77DD}
+  #page-diagram{display:flex;flex:1;overflow:hidden}
+  #page-sim{display:none;flex:1;overflow:hidden}
+
+  /* ── SIMULADOR ── */
+  #sim-wrap{display:flex;flex:1;overflow:hidden}
+  #sim-left{width:220px;min-width:220px;background:linear-gradient(180deg,#1c1040,#150d35);border-right:1px solid #2a1f5e;display:flex;flex-direction:column;overflow-y:auto}
+  #sim-center{flex:1;background:#080810;display:flex;flex-direction:column;overflow:hidden}
+  #sim-right{width:280px;min-width:280px;background:linear-gradient(180deg,#1c1040,#150d35);border-left:1px solid #2a1f5e;display:flex;flex-direction:column;overflow:hidden}
+  #sim-canvas{flex:1;overflow-y:auto;padding:20px;display:flex;flex-wrap:wrap;gap:16px;align-content:flex-start}
+  #sim-console{height:190px;min-height:190px;background:#04030c;border-top:1px solid #2a1f5e;display:flex;flex-direction:column;flex-shrink:0}
+  #sim-console-head{padding:6px 12px;font-size:10px;font-weight:700;color:#534AB7;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid #2a1f5e;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  #sim-log{flex:1;overflow-y:auto;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9}
+  .log-line{padding:1px 0}
+  .log-info{color:#AFA9EC}
+  .log-call{color:#85B7EB}
+  .log-result{color:#97C459}
+  .log-error{color:#F09595}
+  .log-ts{color:#3C3489;font-size:10px;margin-right:6px}
+  .inst-card{background:#10091e;border:1.5px solid #1e1540;border-radius:10px;overflow:hidden;width:195px;flex-shrink:0;cursor:pointer;transition:all 0.15s}
+  .inst-card:hover{border-color:#534AB7}
+  .inst-card.active-inst{border-color:#7F77DD;box-shadow:0 0 14px rgba(127,119,221,0.2)}
+  .inst-head{padding:8px 10px;display:flex;align-items:center;gap:7px;border-bottom:1px solid rgba(83,74,183,0.15)}
+  .inst-badge{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+  .inst-name-wrap{flex:1;overflow:hidden}
+  .inst-varname{font-size:12px;font-weight:600;color:#EEEDFE}
+  .inst-typename{font-size:10px;color:#534AB7;font-family:'JetBrains Mono',monospace}
+  .inst-attrs{padding:6px 10px 8px}
+  .inst-attr-row{display:flex;align-items:baseline;gap:5px;padding:2px 0;font-size:11px;font-family:'JetBrains Mono',monospace}
+  .inst-attr-key{color:#97C459;flex-shrink:0;font-size:10px}
+  .inst-attr-val{color:#CECBF6;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .inst-del{font-size:13px;color:#3C3489;cursor:pointer;padding:0 2px;margin-left:auto;flex-shrink:0}
+  .inst-del:hover{color:#F09595}
+  .sim-ph{flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;color:#1e1540;text-align:center;padding:20px;line-height:1.7}
+  .sim-panel-head{padding:9px 12px 6px;font-size:9px;font-weight:700;color:#534AB7;letter-spacing:0.12em;text-transform:uppercase;border-bottom:0.5px solid rgba(83,74,183,0.25);flex-shrink:0}
+  .cls-pick{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:12px;cursor:pointer;color:#CECBF6;border-bottom:0.5px solid rgba(83,74,183,0.12);transition:background 0.12s}
+  .cls-pick:hover{background:rgba(175,169,236,0.08);color:#fff}
+  .func-row{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:11px;cursor:pointer;color:#85B7EB;border-bottom:0.5px solid rgba(83,74,183,0.08);font-family:'JetBrains Mono',monospace;transition:background 0.12s}
+  .func-row:hover{background:rgba(133,183,235,0.07);color:#EEEDFE}
+  #sim-detail{padding:12px;flex:1;overflow-y:auto}
+  .sim-field-label{font-size:9px;color:#534AB7;text-transform:uppercase;letter-spacing:0.08em;margin-top:10px;margin-bottom:3px;font-weight:700}
+  .sim-field-label:first-child{margin-top:0}
+
+  /* ── MOBILE ── */
+  @media(max-width:600px){
+    body{overflow:auto}
+    #topbar{padding:8px 10px;gap:5px}
+    #topbar-title{font-size:13px}
+    .tb-btn{font-size:11px;padding:4px 8px}
+    .tb-sep{display:none}
+    #body{flex-direction:column;overflow:auto;height:auto}
+    #left{width:100%;min-width:0;border-right:none;border-bottom:1px solid #2a1f5e;flex-direction:row;flex-wrap:wrap;overflow:visible}
+    #left .panel-head{width:100%}
+    #left .add-btn,#left .rel-btn{flex:1;min-width:80px;justify-content:center;padding:8px 6px;font-size:11px}
+    #left .add-btn .icon{display:none}
+    #left .leg-row{display:none}
+    #glosario{width:100%;border-top:1px solid rgba(83,74,183,0.3)}
+    #canvas{min-height:55vh;height:55vh}
+    #right{width:100%;min-width:0;border-left:none;border-top:1px solid #2a1f5e;max-height:50vh;overflow-y:auto}
+    .modal-box{width:95vw;max-height:90vh}
+    .modal-sm{width:95vw}
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span id="topbar-title">UML Java Designer</span>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="addClass('class')">+ Clase</button>
+  <button class="tb-btn" onclick="addClass('abstract')">+ Abstracta</button>
+  <button class="tb-btn" onclick="addClass('interface')">+ Interfaz</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="rel-tb-btn" onclick="cycleRelMode()">Relación: ninguna</button>
+  <button class="tb-btn danger" onclick="deleteSelected()">Eliminar</button>
+  <button class="tb-btn" onclick="clearAll()" style="color:#AFA9EC">Limpiar</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn violet" onclick="openModal('code-in-modal')">📥 Código → Diagrama</button>
+  <button class="tb-btn green" onclick="openCodeOutModal()">📤 Ver código Java</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn amber" onclick="saveCurrentProject()">💾 Guardar</button>
+  <button class="tb-btn" onclick="promptNewProject()" style="color:#AFA9EC">Nuevo proyecto</button>
+  <span id="status">Sin selección</span>
+</div>
+
+<div id="tab-bar">
+  <div class="tab active" id="tab-diag" onclick="switchTab('diagram')">🗂 Diagrama</div>
+  <div class="tab" id="tab-sim" onclick="switchTab('sim')">⚙️ Simulador</div>
+</div>
+
+<div id="page-diagram">
+  <div id="left">
+    <div class="panel-head">Agregar clase</div>
+    <div class="add-btn" onclick="addClass('class')"><div class="icon ic-class">C</div>Clase</div>
+    <div class="add-btn" onclick="addClass('abstract')"><div class="icon ic-abs">A</div>Abstracta</div>
+    <div class="add-btn" onclick="addClass('interface')"><div class="icon ic-iface">I</div>Interfaz</div>
+
+    <div class="panel-head" style="margin-top:4px">Relaciones</div>
+    <div class="rel-btn active-rel" id="rb-none" onclick="setRel(null)"><div class="dot" style="background:#2a1f5e"></div>Ninguna</div>
+    <div class="rel-btn" id="rb-inherit" onclick="setRel('inherit')"><div class="dot" style="background:#534AB7"></div>Herencia</div>
+    <div class="rel-btn" id="rb-implement" onclick="setRel('implement')"><div class="dot" style="background:#0F6E56"></div>Implementa</div>
+    <div class="rel-btn" id="rb-assoc" onclick="setRel('assoc')"><div class="dot" style="background:#378ADD"></div>Asociación</div>
+    <div class="rel-btn" id="rb-compose" onclick="setRel('compose')"><div class="dot" style="background:#E24B4A"></div>Composición</div>
+
+    <div class="panel-head" style="margin-top:4px">Leyenda flechas</div>
+    <div class="leg-row"><div class="leg-line" style="background:#534AB7"></div>herencia</div>
+    <div class="leg-row"><div class="leg-dash" style="border-color:#0F6E56"></div>implementa</div>
+    <div class="leg-row"><div class="leg-line" style="background:#378ADD"></div>asociación</div>
+    <div class="leg-row"><div class="leg-line" style="background:#E24B4A"></div>composición</div>
+
+    <div class="panel-head" style="margin-top:4px">Visibilidad</div>
+    <div class="leg-row"><span class="vis-pill" style="background:#0C447C;color:#B5D4F4">+</span>public</div>
+    <div class="leg-row"><span class="vis-pill" style="background:#791F1F;color:#F7C1C1">-</span>private</div>
+    <div class="leg-row"><span class="vis-pill" style="background:#27500A;color:#C0DD97">#</span>protected</div>
+
+    <div id="glosario">
+      <div class="glos-head" onclick="toggleGlosario()">
+        <span>📖</span>&nbsp;Glosario
+        <span id="glos-arrow" style="margin-left:auto;font-size:10px">▼</span>
+      </div>
+      <div class="glos-body" id="glos-body">
+        <div class="glos-item" style="background:rgba(83,74,183,0.06)">
+          <div class="glos-item-head" style="color:#7F77DD;font-size:9px;letter-spacing:0.1em;text-transform:uppercase">Relaciones</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div class="dot" style="background:#534AB7"></div>Herencia</div>
+          <div class="glos-item-desc">Una clase "hija" recibe todos los atributos y funciones de la clase "padre".</div>
+          <div class="glos-when">📌 Ej: Perro es un Animal.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div class="dot" style="background:#0F6E56"></div>Implementa</div>
+          <div class="glos-item-desc">Una clase cumple el "contrato" de una interfaz, definiendo sus funciones obligatorias.</div>
+          <div class="glos-when">📌 Ej: Perro puede Nadar.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div class="dot" style="background:#378ADD"></div>Asociación</div>
+          <div class="glos-item-desc">Una clase usa o conoce a otra, pero ambas existen de forma independiente.</div>
+          <div class="glos-when">📌 Ej: Alumno usa un Aula.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div class="dot" style="background:#E24B4A"></div>Composición</div>
+          <div class="glos-item-desc">Una clase "contiene" a otra. Si el padre se elimina, el hijo también desaparece.</div>
+          <div class="glos-when">📌 Ej: Casa tiene Habitaciones.</div>
+        </div>
+
+        <div class="glos-item" style="background:rgba(83,74,183,0.06)">
+          <div class="glos-item-head" style="color:#7F77DD;font-size:9px;letter-spacing:0.1em;text-transform:uppercase">Tipos de clase</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div style="width:14px;height:14px;border-radius:3px;background:#3C3489;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#CECBF6;font-family:'JetBrains Mono',monospace">C</div>Clase</div>
+          <div class="glos-item-desc">Plantilla base para crear objetos. Define atributos (datos) y funciones (comportamiento).</div>
+          <div class="glos-when">📌 Ej: Perro, Auto, Persona.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div style="width:14px;height:14px;border-radius:3px;background:#633806;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#FAC775;font-family:'JetBrains Mono',monospace">A</div>Abstracta</div>
+          <div class="glos-item-desc">Clase que NO se puede instanciar directamente. Solo sirve como base para otras clases. Puede tener funciones sin implementar.</div>
+          <div class="glos-when">📌 Ej: Animal (nadie crea un "Animal", crea un Perro o un Gato).</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><div style="width:14px;height:14px;border-radius:3px;background:#085041;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#9FE1CB;font-family:'JetBrains Mono',monospace">I</div>Interfaz</div>
+          <div class="glos-item-desc">Define un "contrato" de funciones que otras clases deben cumplir. No tiene atributos ni implementación propia.</div>
+          <div class="glos-when">📌 Ej: Nadador obliga a definir nadar().</div>
+        </div>
+
+        <div class="glos-item" style="background:rgba(83,74,183,0.06)">
+          <div class="glos-item-head" style="color:#7F77DD;font-size:9px;letter-spacing:0.1em;text-transform:uppercase">Visibilidad</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><span style="background:#0C447C;color:#B5D4F4;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace">+</span>&nbsp;public</div>
+          <div class="glos-item-desc">Cualquier clase puede ver y usar este atributo o función. Visible desde afuera, pero no se hereda automáticamente a los hijos en este diseñador.</div>
+          <div class="glos-when">📌 Ej: + getNombre(): String</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><span style="background:#791F1F;color:#F7C1C1;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace">-</span>&nbsp;private</div>
+          <div class="glos-item-desc">Solo la propia clase puede usarlo. No se hereda ni es visible desde afuera.</div>
+          <div class="glos-when">📌 Ej: - contraseña: String</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-item-head"><span style="background:#27500A;color:#C0DD97;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace">#</span>&nbsp;protected</div>
+          <div class="glos-item-desc">Solo la clase y sus hijos lo reciben. Es la visibilidad correcta para heredar atributos y funciones a clases hijas.</div>
+          <div class="glos-when">📌 Ej: # calcularImpuesto(): double</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="canvas">
+    <svg id="svg">
+      <defs>
+        <marker id="mh-purple" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0,10 4,0 8" fill="none" stroke="#7F77DD" stroke-width="1.5"/></marker>
+        <marker id="mh-teal" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0,10 4,0 8" fill="none" stroke="#1D9E75" stroke-width="1.5"/></marker>
+        <marker id="mh-blue" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#378ADD"/></marker>
+        <marker id="mh-red" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#E24B4A"/></marker>
+      </defs>
+      <g id="al"></g>
+      <g id="cl"></g>
+    </svg>
+  </div>
+
+  <div id="right">
+    <div class="panel-head">Proyectos guardados</div>
+    <div class="new-proj-row">
+      <input class="new-proj-input" id="new-proj-name" placeholder="Nombre..." onkeydown="if(event.key==='Enter')createProject()"/>
+      <button class="new-proj-btn" onclick="createProject()">+ Crear</button>
+    </div>
+    <div id="proj-list"></div>
+    <div class="panel-head" style="margin-top:4px">Propiedades</div>
+    <div id="props"><div class="empty-msg">Hacé clic en una clase para editar</div></div>
+  </div>
+</div><!-- fin page-diagram -->
+
+<!-- ── PÁGINA SIMULADOR ── -->
+<div id="page-sim">
+  <div id="sim-wrap">
+    <!-- panel izquierdo: clases disponibles -->
+    <div id="sim-left">
+      <div class="sim-panel-head">Clases instanciables</div>
+      <div id="sim-cls-list"><div class="empty-msg">Creá clases en el Diagrama primero</div></div>
+    </div>
+
+    <!-- centro: objetos creados + consola -->
+    <div id="sim-center">
+      <div id="sim-canvas">
+        <div class="sim-ph" id="sim-ph">Seleccioná una clase de la izquierda<br>para crear un objeto (instancia)</div>
+      </div>
+      <div id="sim-console">
+        <div id="sim-console-head">
+          <span>▶ Consola</span>
+          <button onclick="clearLog()" style="font-size:10px;background:none;border:none;color:#534AB7;cursor:pointer">Limpiar</button>
+        </div>
+        <div id="sim-log"></div>
+      </div>
+    </div>
+
+    <!-- panel derecho: detalle del objeto seleccionado -->
+    <div id="sim-right">
+      <div class="sim-panel-head">Objeto seleccionado</div>
+      <div id="sim-detail"><div class="empty-msg">Clic en un objeto para ver sus detalles y llamar funciones</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal código salida -->
+<div class="modal-bg" id="code-out-modal">
+  <div class="modal-box">
+    <div class="modal-head"><span>📤 Código Java generado</span><button class="modal-close" onclick="closeModal('code-out-modal')">&#215;</button></div>
+    <pre id="code-out" class="modal-body" style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.75;color:#CECBF6;background:#080810;margin:0"></pre>
+    <div class="modal-foot">
+      <button class="m-btn sec" onclick="copyCode()">Copiar</button>
+      <button class="m-btn pri" onclick="closeModal('code-out-modal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal código entrada -->
+<div class="modal-bg" id="code-in-modal">
+  <div class="modal-box">
+    <div class="modal-head"><span>📥 Código → Diagrama</span><button class="modal-close" onclick="closeModal('code-in-modal')">&#215;</button></div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:#AFA9EC;margin-bottom:10px;line-height:1.65">
+        Pegá tu código Java y se genera el diagrama automáticamente.<br>
+        <span style="color:#534AB7;font-size:11px">Detecta: clases, abstractas, interfaces, extends, implements, atributos y funciones.</span>
+      </div>
+      <textarea id="code-in" placeholder="public class Animal {
+    private String nombre;
+    private int edad;
+
+    public String getNombre() { }
+    public void hacerSonido() { }
+}
+
+public class Perro extends Animal {
+    private String raza;
+
+    public void ladrar() { }
+}
+
+public interface Nadador {
+    public void nadar();
+}"></textarea>
+      <div id="parse-info" class="parse-info"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="m-btn sec" onclick="closeModal('code-in-modal')">Cancelar</button>
+      <button class="m-btn grn" onclick="parseCodeToDiagram()">⚡ Generar diagrama</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nuevo proyecto -->
+<div class="modal-bg" id="new-proj-modal">
+  <div class="modal-box modal-sm">
+    <div class="modal-head"><span>Nuevo proyecto</span><button class="modal-close" onclick="closeModal('new-proj-modal')">&#215;</button></div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:#AFA9EC;margin-bottom:8px">Nombre del proyecto:</div>
+      <input class="prop-input" id="modal-proj-name" placeholder="Ej: Sistema de ventas" onkeydown="if(event.key==='Enter')confirmNewProject()"/>
+      <div style="font-size:11px;color:#3C3489;margin-top:8px">El diagrama actual se guarda primero.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="m-btn sec" onclick="closeModal('new-proj-modal')">Cancelar</button>
+      <button class="m-btn pri" onclick="confirmNewProject()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="display:none;position:fixed;bottom:20px;right:20px;background:#3C3489;color:#EEEDFE;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;border:1px solid #7F77DD;transition:opacity 0.3s"></div>
+
+<script>
+let classes=[],relations=[],selId=null,relMode=null,relFrom=null,drag=null,nid=1;
+let currentProject=null;
+const STORAGE_KEY='uml-java-v2';
+
+const svg=document.getElementById('svg');
+const al=document.getElementById('al');
+const cl=document.getElementById('cl');
+const props=document.getElementById('props');
+const statusEl=document.getElementById('status');
+const relTbBtn=document.getElementById('rel-tb-btn');
+
+const REL_CFG={
+  inherit:{stroke:'#7F77DD',dash:'',marker:'mh-purple',label:'herencia'},
+  implement:{stroke:'#1D9E75',dash:'6,3',marker:'mh-teal',label:'implementa'},
+  assoc:{stroke:'#378ADD',dash:'',marker:'mh-blue',label:'asociación'},
+  compose:{stroke:'#E24B4A',dash:'',marker:'mh-red',label:'composición'}
+};
+const TYPE_CFG={
+  class:{hdr:'#3C3489',hdrMid:'#534AB7',badge:'C'},
+  abstract:{hdr:'#633806',hdrMid:'#854F0B',badge:'A'},
+  interface:{hdr:'#085041',hdrMid:'#0F6E56',badge:'I'}
+};
+
+function gR(id){return classes.find(c=>c.id===id)}
+function getInherited(cls){
+  // Construye la cadena de ancestros: [padre, abuelo, bisabuelo, ...]
+  // con el id del hijo directo en cada salto
+  const chain=[];
+  let currentId=cls.id;
+  let visited=new Set();
+  while(true){
+    if(visited.has(currentId))break;visited.add(currentId);
+    const parentRel=relations.find(r=>r.from===currentId&&r.type==='inherit');
+    if(!parentRel)break;
+    const parent=gR(parentRel.to);if(!parent)break;
+    chain.push({parent, directChildId:currentId});
+    currentId=parent.id;
+  }
+
+  const inherited={attrs:[],funcs:[]};
+
+  chain.forEach(({parent, directChildId})=>{
+    // El padre bloqueó algunos miembros para su hijo directo
+    const blocked=(parent.blockedFor||{})[directChildId]||[];
+
+    parent.attrs.filter(a=>a[0]==='#').forEach(a=>{
+      if(blocked.includes(a))return; // el padre lo bloqueó para su hijo directo
+      // verificar que ningún intermediario en la cadena lo haya bloqueado
+      // para su propio hijo descendiente
+      if(!inherited.attrs.includes(a))inherited.attrs.push(a);
+    });
+
+    parent.funcs.filter(f=>f[0]==='#').forEach(f=>{
+      if(blocked.includes(f))return;
+      if(!inherited.funcs.includes(f))inherited.funcs.push(f);
+    });
+  });
+
+  // Ahora filtrar: si algún intermediario bloqueó un miembro heredado
+  // para su propio hijo (que está más abajo en la cadena hacia cls), quitarlo
+  // Recorremos la cadena de abajo a arriba y acumulamos bloqueos transitivos
+  const transitiveBlocked=new Set();
+  // Recorremos en orden: el más cercano primero
+  for(let i=0;i<chain.length;i++){
+    const {parent, directChildId}=chain[i];
+    const blocked=(parent.blockedFor||{})[directChildId]||[];
+    blocked.forEach(m=>transitiveBlocked.add(m));
+  }
+
+  inherited.attrs=inherited.attrs.filter(a=>!transitiveBlocked.has(a));
+  inherited.funcs=inherited.funcs.filter(f=>!transitiveBlocked.has(f));
+
+  return inherited;
+}
+function getChildren(id){
+  return relations.filter(r=>r.type==='inherit'&&r.to===id).map(r=>gR(r.from)).filter(Boolean);
+}
+function toggleBlockAll(parentId,childId,memberIdx){
+  const parent=gR(parentId);if(!parent)return;
+  // todos los pasables: propios # + heredados del abuelo
+  const propios=[...parent.attrs,...parent.funcs].filter(m=>m[0]==='#');
+  const inh=getInherited(parent);
+  const heredados=[...inh.attrs,...inh.funcs].filter(m=>!propios.includes(m));
+  const todos=[...propios,...heredados];
+  const member=todos[memberIdx];if(!member)return;
+  if(!parent.blockedFor)parent.blockedFor={};
+  if(!parent.blockedFor[childId])parent.blockedFor[childId]=[];
+  const idx=parent.blockedFor[childId].indexOf(member);
+  if(idx>=0)parent.blockedFor[childId].splice(idx,1);
+  else parent.blockedFor[childId].push(member);
+  render();renderProps();if(currentProject)saveProjectData(currentProject);
+}
+function calcH(c){
+  const inh=getInherited(c);
+  const inhAttrs=inh.attrs.filter(a=>!c.attrs.includes(a));
+  const inhFuncs=inh.funcs.filter(f=>!c.funcs.includes(f));
+  const totalAttrs=Math.max(1,c.attrs.length+inhAttrs.length);
+  const totalFuncs=Math.max(1,c.funcs.length+inhFuncs.length);
+  return 44+totalAttrs*17+10+totalFuncs*17+10;
+}
+function openModal(id){document.getElementById(id).style.display='flex';}
+function closeModal(id){document.getElementById(id).style.display='none';}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';t.style.opacity='1';
+  clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.style.display='none',300);},2200);
+}
+
+// localStorage
+function getAllProjects(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');}catch{return{};}}
+function setAllProjects(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
+function saveProjectData(name){
+  const all=getAllProjects();
+  all[name]={classes:JSON.parse(JSON.stringify(classes)),relations:JSON.parse(JSON.stringify(relations)),nid,ts:Date.now()};
+  setAllProjects(all);
+}
+function loadProjectData(name){
+  const p=getAllProjects()[name];if(!p)return false;
+  classes=p.classes||[];relations=p.relations||[];nid=p.nid||1;return true;
+}
+function deleteProjectData(name){const all=getAllProjects();delete all[name];setAllProjects(all);}
+
+// proyectos UI
+function renderProjectList(){
+  const list=document.getElementById('proj-list');
+  const names=Object.keys(getAllProjects()).sort();
+  if(!names.length){list.innerHTML='<div class="empty-msg" style="padding:14px 12px">Sin proyectos aún</div>';return;}
+  list.innerHTML=names.map(n=>{
+    const safe=n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return`<div class="proj-item ${n===currentProject?'active-proj':''}" onclick="switchProject('${safe}')">
+      <span class="proj-name" title="${n}">${n}</span>
+      <span class="proj-del" title="Eliminar" onclick="event.stopPropagation();deleteProject('${safe}')">&#215;</span>
+    </div>`;
+  }).join('');
+}
+function switchProject(name){
+  if(name===currentProject)return;
+  if(currentProject)saveProjectData(currentProject);
+  if(!loadProjectData(name))return;
+  currentProject=name;selId=null;render();renderProps();renderProjectList();setStatus('Proyecto: '+name);
+}
+function createProject(){
+  const inp=document.getElementById('new-proj-name');
+  const name=inp.value.trim();if(!name)return;
+  if(currentProject)saveProjectData(currentProject);
+  classes=[];relations=[];selId=null;nid=1;currentProject=name;saveProjectData(name);inp.value='';
+  render();renderProps();renderProjectList();setStatus('Proyecto: '+name);
+}
+function deleteProject(name){
+  if(!confirm('¿Eliminar "'+name+'"?'))return;
+  deleteProjectData(name);
+  if(currentProject===name){
+    const rem=Object.keys(getAllProjects());
+    if(rem.length){loadProjectData(rem[0]);currentProject=rem[0];}
+    else{classes=[];relations=[];nid=1;currentProject=null;}
+    selId=null;render();renderProps();
+  }
+  renderProjectList();
+}
+function saveCurrentProject(){
+  if(!currentProject){promptNewProject();return;}
+  saveProjectData(currentProject);showToast('✓ Guardado: '+currentProject);
+}
+function promptNewProject(){
+  document.getElementById('modal-proj-name').value='';openModal('new-proj-modal');
+  setTimeout(()=>document.getElementById('modal-proj-name').focus(),120);
+}
+function confirmNewProject(){
+  const name=document.getElementById('modal-proj-name').value.trim();if(!name)return;
+  closeModal('new-proj-modal');
+  if(currentProject)saveProjectData(currentProject);
+  classes=[];relations=[];selId=null;nid=1;currentProject=name;saveProjectData(name);
+  render();renderProps();renderProjectList();setStatus('Proyecto: '+name);
+}
+setInterval(()=>{if(currentProject)saveProjectData(currentProject);},30000);
+
+// glosario
+function toggleGlosario(){
+  const b=document.getElementById('glos-body'),a=document.getElementById('glos-arrow');
+  b.classList.toggle('open');a.textContent=b.classList.contains('open')?'▲':'▼';
+}
+
+// clases
+function addClass(type){
+  const cv=document.getElementById('canvas');
+  const x=40+Math.random()*(cv.offsetWidth-260),y=40+Math.random()*(cv.offsetHeight-200);
+  const n={class:'MiClase',abstract:'ClaseAbstracta',interface:'MiInterfaz'};
+  classes.push({id:nid++,type,name:n[type],x,y,w:185,attrs:['-nombre: String'],funcs:['+getNombre(): String']});
+  render();selectClass(classes[classes.length-1].id);
+  if(currentProject)saveProjectData(currentProject);
+}
+function setRel(mode){
+  relMode=mode;relFrom=null;
+  document.querySelectorAll('.rel-btn').forEach(b=>b.classList.remove('active-rel'));
+  if(mode){
+    document.getElementById('rb-'+mode).classList.add('active-rel');
+    relTbBtn.textContent='Relación: '+REL_CFG[mode].label;relTbBtn.classList.add('active');
+    setStatus('Clic en clase origen');
+  } else {
+    document.getElementById('rb-none').classList.add('active-rel');
+    relTbBtn.textContent='Relación: ninguna';relTbBtn.classList.remove('active');
+    setStatus(currentProject?'Proyecto: '+currentProject:'Sin selección');
+  }
+}
+let relCycle=['inherit','implement','assoc','compose',null],relIdx=-1;
+function cycleRelMode(){relIdx=(relIdx+1)%relCycle.length;setRel(relCycle[relIdx]);}
+function setStatus(t){statusEl.textContent=t;}
+function selectClass(id){selId=id;render();renderProps();setStatus(id?'Clase: '+gR(id)?.name:(currentProject?'Proyecto: '+currentProject:'Sin selección'));}
+function deleteSelected(){
+  if(selId===null)return;
+  classes=classes.filter(c=>c.id!==selId);relations=relations.filter(r=>r.from!==selId&&r.to!==selId);
+  selId=null;render();renderProps();setStatus(currentProject?'Proyecto: '+currentProject:'Sin selección');
+  if(currentProject)saveProjectData(currentProject);
+}
+function clearAll(){
+  if(!confirm('¿Limpiar todo el diagrama?'))return;
+  classes=[];relations=[];selId=null;render();renderProps();
+  if(currentProject)saveProjectData(currentProject);
+}
+
+// render
+function render(){al.innerHTML='';cl.innerHTML='';relations.forEach(r=>renderArrow(r));classes.forEach(c=>renderClass(c));}
+function edgePoint(cls,ox,oy){
+  const h=calcH(cls),cx=cls.x+cls.w/2,cy=cls.y+h/2,dx=ox-cx,dy=oy-cy;
+  if(Math.abs(dx)<0.01&&Math.abs(dy)<0.01)return{x:cx,y:cy};
+  const sx=cls.w/2,sy=h/2,tx=Math.abs(dx)/sx,ty=Math.abs(dy)/sy;
+  if(tx>ty){const t=sx/Math.abs(dx);return{x:cx+dx*t,y:cy+dy*t};}
+  else{const t=sy/Math.abs(dy);return{x:cx+dx*t,y:cy+dy*t};}
+}
+function renderArrow(r){
+  const a=gR(r.from),b=gR(r.to);if(!a||!b)return;
+  const acx=a.x+a.w/2,acy=a.y+calcH(a)/2,ep=edgePoint(b,acx,acy);
+  const cfg=REL_CFG[r.type];
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',acx);line.setAttribute('y1',acy);line.setAttribute('x2',ep.x);line.setAttribute('y2',ep.y);
+  line.setAttribute('stroke',cfg.stroke);line.setAttribute('stroke-width','2');
+  if(cfg.dash)line.setAttribute('stroke-dasharray',cfg.dash);
+  line.setAttribute('marker-end','url(#'+cfg.marker+')');al.appendChild(line);
+}
+function mk(tag,attrs){
+  const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e;
+}
+function renderClass(cls){
+  const h=calcH(cls),cfg=TYPE_CFG[cls.type],g=mk('g',{});
+  g.style.cursor='move';g.dataset.id=cls.id;
+  if(selId===cls.id)
+    g.appendChild(mk('rect',{x:cls.x-5,y:cls.y-5,width:cls.w+10,height:h+10,rx:11,fill:'none',stroke:'#7F77DD','stroke-width':'1.5','stroke-dasharray':'5,3',opacity:'0.7'}));
+  g.appendChild(mk('rect',{x:cls.x,y:cls.y,width:cls.w,height:h,rx:8,fill:'#10091e',stroke:cfg.hdrMid,'stroke-width':'1.5'}));
+  g.appendChild(mk('rect',{x:cls.x,y:cls.y,width:cls.w,height:44,rx:8,fill:cfg.hdr}));
+  g.appendChild(mk('rect',{x:cls.x,y:cls.y+36,width:cls.w,height:8,fill:cfg.hdr}));
+  g.appendChild(mk('rect',{x:cls.x+8,y:cls.y+12,width:19,height:19,rx:5,fill:'rgba(255,255,255,0.13)'}));
+  const bTxt=mk('text',{x:cls.x+17.5,y:cls.y+25,'text-anchor':'middle'});
+  bTxt.setAttribute('style','font-size:11px;font-weight:700;fill:rgba(255,255,255,0.85);font-family:JetBrains Mono,monospace');
+  bTxt.textContent=cfg.badge;g.appendChild(bTxt);
+  if(cls.type!=='class'){
+    const sub=mk('text',{x:cls.x+cls.w/2,y:cls.y+17,'text-anchor':'middle'});
+    sub.setAttribute('style','font-size:9px;fill:rgba(255,255,255,0.55);font-family:Syne,sans-serif;letter-spacing:0.04em');
+    sub.textContent=cls.type==='interface'?'«interface»':'«abstract»';g.appendChild(sub);
+  }
+  const title=mk('text',{x:cls.x+cls.w/2,y:cls.y+(cls.type==='class'?30:36),'text-anchor':'middle'});
+  title.setAttribute('style','font-size:13px;font-weight:600;fill:#fff;font-family:Syne,sans-serif');
+  title.textContent=cls.name;g.appendChild(title);
+  g.appendChild(mk('line',{x1:cls.x,y1:cls.y+44,x2:cls.x+cls.w,y2:cls.y+44,stroke:cfg.hdrMid,'stroke-width':'1'}));
+  const inh=getInherited(cls);
+  const inhAttrs=inh.attrs.filter(a=>!cls.attrs.includes(a));
+  const inhFuncs=inh.funcs.filter(f=>!cls.funcs.includes(f));
+  let ay=cls.y+44+14;
+  // atributos propios
+  (cls.attrs.length?cls.attrs:inhAttrs.length?[]:['—']).forEach(a=>{
+    const t=mk('text',{x:cls.x+10,y:ay});
+    const col=a[0]==='-'?'#F09595':a[0]==='+'?'#85B7EB':a[0]==='#'?'#97C459':'#888780';
+    t.setAttribute('style','font-size:11px;fill:'+col+';font-family:JetBrains Mono,monospace');
+    t.textContent=a;g.appendChild(t);ay+=17;
+  });
+  // atributos heredados (gris itálico con etiqueta)
+  inhAttrs.forEach(a=>{
+    const t=mk('text',{x:cls.x+10,y:ay});
+    t.setAttribute('style','font-size:10px;fill:#4a4568;font-family:JetBrains Mono,monospace;font-style:italic');
+    t.textContent=a+' ↑';g.appendChild(t);ay+=17;
+  });
+  ay+=2;
+  g.appendChild(mk('line',{x1:cls.x+8,y1:ay-6,x2:cls.x+cls.w-8,y2:ay-6,stroke:'rgba(127,119,221,0.25)','stroke-width':'1','stroke-dasharray':'3,3'}));
+  // funciones propias
+  (cls.funcs.length?cls.funcs:inhFuncs.length?[]:['—']).forEach(f=>{
+    const t=mk('text',{x:cls.x+10,y:ay+6});
+    const col=f[0]==='-'?'#F09595':f[0]==='+'?'#85B7EB':f[0]==='#'?'#97C459':'#888780';
+    t.setAttribute('style','font-size:11px;fill:'+col+';font-family:JetBrains Mono,monospace');
+    t.textContent=f;g.appendChild(t);ay+=17;
+  });
+  // funciones heredadas (gris itálico)
+  inhFuncs.forEach(f=>{
+    const t=mk('text',{x:cls.x+10,y:ay+6});
+    t.setAttribute('style','font-size:10px;fill:#4a4568;font-family:JetBrains Mono,monospace;font-style:italic');
+    t.textContent=f+' ↑';g.appendChild(t);ay+=17;
+  });
+  g.addEventListener('mousedown',e=>onBoxDown(e,cls.id));cl.appendChild(g);
+}
+function onBoxDown(e,id){
+  e.stopPropagation();
+  if(relMode){
+    if(!relFrom){relFrom=id;setStatus('Ahora clic en la clase destino');}
+    else{
+      if(relFrom!==id){relations.push({from:relFrom,to:id,type:relMode});setRel(null);if(currentProject)saveProjectData(currentProject);}
+      else setRel(null);
+    }
+    render();return;
+  }
+  selectClass(id);const cls=gR(id);
+  drag={id,sx:e.clientX,sy:e.clientY,ox:cls.x,oy:cls.y};
+}
+svg.addEventListener('mousemove',e=>{
+  if(!drag)return;const cls=gR(drag.id);if(!cls)return;
+  cls.x=drag.ox+(e.clientX-drag.sx);cls.y=drag.oy+(e.clientY-drag.sy);render();
+});
+svg.addEventListener('mouseup',()=>{if(drag&&currentProject)saveProjectData(currentProject);drag=null;});
+svg.addEventListener('click',e=>{
+  if(e.target===svg||e.target.tagName==='svg'||e.target.id==='al'){
+    selId=null;render();renderProps();setStatus(currentProject?'Proyecto: '+currentProject:'Sin selección');
+  }
+});
+
+// props
+function renderProps(){
+  const cls=selId?gR(selId):null;
+  if(!cls){props.innerHTML='<div class="empty-msg">Hacé clic en una clase para editar</div>';return;}
+  const cfg=TYPE_CFG[cls.type];
+  const children=getChildren(cls.id);
+
+  // sección de herencia selectiva por hijo
+  // incluye tanto los propios # como los que esta clase recibió del abuelo
+  const propiosPasables=[...cls.attrs,...cls.funcs].filter(m=>m[0]==='#');
+  const inhDeCls=getInherited(cls); // lo que esta clase ya recibió de arriba
+  const heredadosPasables=[...inhDeCls.attrs,...inhDeCls.funcs].filter(m=>!propiosPasables.includes(m));
+  const todosPasables=[...propiosPasables,...heredadosPasables];
+
+  let inheritSection='';
+  if(children.length>0 && todosPasables.length>0){
+    inheritSection=`<div class="prop-label" style="margin-top:12px;color:#854F0B;border-top:0.5px solid rgba(83,74,183,0.25);padding-top:10px">Qué pasa a cada hijo</div>`;
+    children.forEach(child=>{
+      const blocked=(cls.blockedFor||{})[child.id]||[];
+      const childCfg=TYPE_CFG[child.type];
+      inheritSection+=`<div style="margin-bottom:8px;background:rgba(0,0,0,0.25);border-radius:6px;border:1px solid rgba(83,74,183,0.2);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(83,74,183,0.12);border-bottom:1px solid rgba(83,74,183,0.15)">
+          <div style="width:16px;height:16px;border-radius:3px;background:${childCfg.hdr};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;flex-shrink:0">${childCfg.badge}</div>
+          <span style="font-size:11px;font-weight:600;color:#CECBF6">${child.name}</span>
+        </div>`;
+      todosPasables.forEach((m,mi)=>{
+        const isBlocked=blocked.includes(m);
+        const esHeredado=heredadosPasables.includes(m);
+        const col='#97C459';
+        inheritSection+=`<div style="display:flex;align-items:center;gap:7px;padding:5px 8px;border-bottom:0.5px solid rgba(83,74,183,0.1);cursor:pointer" onclick="toggleBlockAll(${cls.id},${child.id},${mi})">
+          <div style="width:14px;height:14px;border-radius:3px;border:1px solid ${isBlocked?'#A32D2D':'#534AB7'};background:${isBlocked?'rgba(162,45,45,0.3)':'rgba(83,74,183,0.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px">${isBlocked?'✕':'✓'}</div>
+          <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:${isBlocked?'#4a4568':col};text-decoration:${isBlocked?'line-through':'none'};font-style:${esHeredado?'italic':'normal'}">${m}${esHeredado?' ↑':''}</span>
+        </div>`;
+      });
+      inheritSection+=`</div>`;
+    });
+  } else if(children.length>0 && todosPasables.length===0){
+    inheritSection=`<div class="prop-label" style="margin-top:12px;color:#3C3489;border-top:0.5px solid rgba(83,74,183,0.25);padding-top:10px">Sin atributos # para heredar</div>`;
+  }
+
+  props.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid rgba(83,74,183,0.3)">
+      <div style="width:28px;height:28px;border-radius:6px;background:${cfg.hdr};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace">${cfg.badge}</div>
+      <div style="font-size:13px;font-weight:600;color:#EEEDFE;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cls.name}</div>
+    </div>
+    <div class="prop-label">Nombre</div>
+    <input class="prop-input" value="${cls.name}" oninput="upd('name',this.value)"/>
+    <div class="prop-label">Tipo</div>
+    <select class="prop-sel" onchange="upd('type',this.value)">
+      <option value="class" ${cls.type==='class'?'selected':''}>Clase</option>
+      <option value="abstract" ${cls.type==='abstract'?'selected':''}>Abstracta</option>
+      <option value="interface" ${cls.type==='interface'?'selected':''}>Interfaz</option>
+    </select>
+    <div class="prop-label">Atributos</div>
+    <textarea class="prop-ta" oninput="updList('attrs',this.value)">${cls.attrs.join('\n')}</textarea>
+    <div class="hint">- nombre: String<br>+ valor: int<br># total: double</div>
+    <div class="prop-label">Funciones</div>
+    <textarea class="prop-ta" oninput="updList('funcs',this.value)">${cls.funcs.join('\n')}</textarea>
+    <div class="hint">+ getNombre(): String<br>- calcular(): void</div>
+    ${inheritSection}
+    <button class="del-btn" onclick="deleteSelected()">Eliminar clase</button>
+  `;
+}
+function upd(f,v){const cls=gR(selId);if(!cls)return;cls[f]=v;render();setStatus('Clase: '+cls.name);if(currentProject)saveProjectData(currentProject);}
+function updList(f,v){const cls=gR(selId);if(!cls)return;cls[f]=v.split('\n').filter(l=>l.trim());render();if(currentProject)saveProjectData(currentProject);}
+
+// exportar código
+let lastCode='';
+function openCodeOutModal(){
+  let code='// Código generado por UML Java Designer\n';
+  if(currentProject)code+='// Proyecto: '+currentProject+'\n';
+  code+='\n';
+  classes.forEach(cls=>{
+    const rels=relations.filter(r=>r.from===cls.id);
+    const ext=rels.filter(r=>r.type==='inherit').map(r=>gR(r.to)?.name).filter(Boolean);
+    const impl=rels.filter(r=>r.type==='implement').map(r=>gR(r.to)?.name).filter(Boolean);
+    const kw=cls.type==='interface'?'interface':cls.type==='abstract'?'abstract class':'class';
+    let decl=`public ${kw} ${cls.name}`;
+    if(ext.length)decl+=` extends ${ext[0]}`;
+    if(impl.length)decl+=` implements ${impl.join(', ')}`;
+    code+=decl+' {\n\n';
+    cls.attrs.forEach(a=>{
+      const vis=a[0]==='-'?'private':a[0]==='+'?'public':a[0]==='#'?'protected':'private';
+      const rest=a.slice(1).trim().replace(/^(\w+):\s*(\w+)/,'$2 $1');
+      code+=`    ${vis} ${rest};\n`;
+    });
+    if(cls.attrs.length)code+='\n';
+    cls.funcs.forEach(f=>{
+      const vis=f[0]==='-'?'private':f[0]==='+'?'public':f[0]==='#'?'protected':'public';
+      const rest=f.slice(1).trim();
+      code+=`    ${vis} ${rest} {\n        // TODO: implementar\n    }\n\n`;
+    });
+    code+='}\n\n';
+  });
+  lastCode=code;
+  document.getElementById('code-out').textContent=code;openModal('code-out-modal');
+}
+function copyCode(){navigator.clipboard.writeText(lastCode).then(()=>{const b=event.target;const o=b.textContent;b.textContent='¡Copiado!';setTimeout(()=>b.textContent=o,1500);});}
+
+// CÓDIGO → DIAGRAMA
+function parseCodeToDiagram(){
+  const code=document.getElementById('code-in').value;
+  const info=document.getElementById('parse-info');
+  info.textContent='';info.className='parse-info';
+  const found=[];
+  const classRe=/(?:public\s+)?(?:(abstract)\s+)?(?:(class|interface))\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w\s,]+))?/g;
+  let m;
+  while((m=classRe.exec(code))!==null){
+    const type=m[2]==='interface'?'interface':m[1]?'abstract':'class';
+    const name=m[3],ext=m[4]||null;
+    const impls=m[5]?m[5].split(',').map(s=>s.trim()).filter(Boolean):[];
+    const start=code.indexOf('{',m.index);if(start===-1)continue;
+    let depth=1,i=start+1,block='';
+    while(i<code.length&&depth>0){if(code[i]==='{')depth++;else if(code[i]==='}')depth--;if(depth>0)block+=code[i];i++;}
+    const attrs=[];
+    const attrRe=/^\s*(private|public|protected)\s+(\w[\w<>,\[\]]*)\s+(\w+)\s*;/mg;
+    let am;
+    while((am=attrRe.exec(block))!==null){
+      const vis=am[1]==='private'?'-':am[1]==='public'?'+':'#';
+      attrs.push(`${vis}${am[3]}: ${am[2]}`);
+    }
+    const funcs=[];
+    const funcRe=/^\s*(private|public|protected)\s+(?:abstract\s+)?(\w[\w<>,\[\]]*)\s+(\w+)\s*\(([^)]*)\)/mg;
+    let fm;
+    while((fm=funcRe.exec(block))!==null){
+      const vis=fm[1]==='private'?'-':fm[1]==='public'?'+':'#';
+      funcs.push(`${vis}${fm[3]}(${fm[4].trim()}): ${fm[2]}`);
+    }
+    found.push({name,type,attrs,funcs,ext,impls});
+  }
+  if(!found.length){info.textContent='⚠ No se encontraron clases. Revisá la sintaxis.';info.className='parse-info parse-err';return;}
+  if(classes.length>0&&!confirm('¿Reemplazar el diagrama actual?'))return;
+  classes=[];relations=[];selId=null;nid=1;
+  const cols=Math.ceil(Math.sqrt(found.length));
+  found.forEach((f,idx)=>{
+    const col=idx%cols,row=Math.floor(idx/cols);
+    classes.push({id:nid++,type:f.type,name:f.name,x:40+col*220,y:60+row*220,w:185,attrs:f.attrs,funcs:f.funcs});
+  });
+  found.forEach(f=>{
+    const from=classes.find(c=>c.name===f.name);if(!from)return;
+    if(f.ext){const to=classes.find(c=>c.name===f.ext);if(to)relations.push({from:from.id,to:to.id,type:'inherit'});}
+    f.impls.forEach(iname=>{const to=classes.find(c=>c.name===iname);if(to)relations.push({from:from.id,to:to.id,type:'implement'});});
+  });
+  closeModal('code-in-modal');if(currentProject)saveProjectData(currentProject);
+  render();renderProjectList();showToast('✓ Diagrama generado: '+found.length+' clase(s)');
+}
+
+// init
+function init(){
+  const names=Object.keys(getAllProjects());
+  if(names.length){currentProject=names[0];loadProjectData(currentProject);setStatus('Proyecto: '+currentProject);}
+  else{
+    currentProject='Ejemplo Animal';
+    classes.push({id:nid++,type:'class',name:'Animal',x:40,y:80,w:185,attrs:['-nombre: String','-edad: int'],funcs:['+getNombre(): String','+hacerSonido(): void']});
+    classes.push({id:nid++,type:'abstract',name:'Vertebrado',x:260,y:80,w:185,attrs:['#columna: boolean'],funcs:['#respirar(): void']});
+    classes.push({id:nid++,type:'interface',name:'Nadador',x:480,y:80,w:185,attrs:[],funcs:['+nadar(): void']});
+    classes.push({id:nid++,type:'class',name:'Perro',x:150,y:310,w:185,attrs:['-raza: String','-duenio: String'],funcs:['+ladrar(): void','+getNombre(): String']});
+    relations.push({from:classes[1].id,to:classes[0].id,type:'inherit'});
+    relations.push({from:classes[3].id,to:classes[1].id,type:'inherit'});
+    relations.push({from:classes[3].id,to:classes[2].id,type:'implement'});
+    saveProjectData(currentProject);setStatus('Proyecto: '+currentProject);
+  }
+  setRel(null);render();renderProjectList();
+}
+init();
+
+/* ═══════════════════════════════════════
+   TABS
+═══════════════════════════════════════ */
+function switchTab(tab){
+  const isDiag=tab==='diagram';
+  document.getElementById('page-diagram').style.display=isDiag?'flex':'none';
+  document.getElementById('page-sim').style.display=isDiag?'none':'flex';
+  document.getElementById('tab-diag').classList.toggle('active',isDiag);
+  document.getElementById('tab-sim').classList.toggle('active',!isDiag);
+  if(!isDiag)renderSimulator();
+}
+
+/* ═══════════════════════════════════════
+   SIMULADOR
+═══════════════════════════════════════ */
+let instances=[];   // [{id, varName, clsId, attrVals:{attrStr:value}}]
+let selInstId=null;
+let simNid=1;
+
+// Obtiene todos los atributos visibles de una clase (propios + heredados)
+function getAllAttrs(cls){
+  const inh=getInherited(cls);
+  const propios=cls.attrs;
+  const heredados=inh.attrs.filter(a=>!propios.includes(a));
+  return [...propios,...heredados];
+}
+function getAllFuncs(cls){
+  const inh=getInherited(cls);
+  const propios=cls.funcs;
+  const heredados=inh.funcs.filter(f=>!propios.includes(f));
+  return [...propios,...heredados];
+}
+
+// Parsea "nombre: String" → {name, type}
+function parseAttr(a){
+  const raw=a.slice(1).trim();
+  const m=raw.match(/^(\w+):\s*(\w+)/);
+  return m?{name:m[1],type:m[2]}:{name:raw,type:'String'};
+}
+// Parsea "+ladrar(): void" → {name, params, returnType, vis}
+function parseFunc(f){
+  const vis=f[0];
+  const raw=f.slice(1).trim();
+  const m=raw.match(/^(\w+)\(([^)]*)\):\s*(\w+)/);
+  if(!m)return{vis,name:raw,params:[],returnType:'void'};
+  const params=m[2].trim()?m[2].split(',').map(p=>p.trim()).filter(Boolean):[];
+  return{vis,name:m[1],params,returnType:m[3]};
+}
+
+// Valor por defecto según tipo Java
+function defaultVal(type){
+  if(!type)return'""';
+  const t=type.toLowerCase();
+  if(t==='int'||t==='long'||t==='short'||t==='byte')return'0';
+  if(t==='double'||t==='float')return'0.0';
+  if(t==='boolean')return'false';
+  if(t==='char')return"'a'";
+  return'""';
+}
+
+// Simula qué devuelve una función
+function simulateReturn(funcParsed, inst, cls){
+  const {name, returnType, params}=funcParsed;
+  const n=name.toLowerCase();
+  const rt=(returnType||'').toLowerCase();
+
+  // getters: busca el atributo
+  if(n.startsWith('get')){
+    const attrName=n.slice(3);
+    const val=Object.entries(inst.attrVals).find(([k])=>k.toLowerCase().includes(attrName));
+    if(val)return`"${val[1]}"`;
+  }
+  if(n.startsWith('is'))return'true';
+  if(rt==='void')return null;
+  if(rt==='string')return`"[resultado de ${name}]"`;
+  if(rt==='int'||rt==='long'||rt==='double'||rt==='float')return'42';
+  if(rt==='boolean')return'true';
+  return`[${returnType}]`;
+}
+
+function renderSimulator(){
+  renderSimClsList();
+  renderSimCanvas();
+  renderSimDetail();
+}
+
+function renderSimClsList(){
+  const el=document.getElementById('sim-cls-list');
+  const instanciables=classes.filter(c=>c.type!=='interface'&&c.type!=='abstract');
+  if(!instanciables.length){
+    el.innerHTML='<div class="empty-msg" style="padding:16px 12px">No hay clases concretas.<br>Creá clases normales en el Diagrama.</div>';return;
+  }
+  el.innerHTML=instanciables.map(c=>{
+    const cfg=TYPE_CFG[c.type];
+    return`<div class="cls-pick" onclick="createInstance(${c.id})">
+      <div style="width:22px;height:22px;border-radius:5px;background:${cfg.hdr};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;flex-shrink:0">${cfg.badge}</div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#CECBF6">${c.name}</div>
+        <div style="font-size:10px;color:#534AB7;font-family:'JetBrains Mono',monospace">${getAllAttrs(c).length} atrib · ${getAllFuncs(c).length} func</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function createInstance(clsId){
+  const cls=gR(clsId);if(!cls)return;
+  const varName=cls.name.charAt(0).toLowerCase()+cls.name.slice(1)+(simNid);
+  const attrVals={};
+  getAllAttrs(cls).forEach(a=>{
+    const p=parseAttr(a);
+    attrVals[a]=defaultVal(p.type);
+  });
+  const inst={id:simNid++,varName,clsId,attrVals};
+  instances.push(inst);
+  simLog('info',`new ${cls.name}() → ${varName} creado`);
+  simLog('result',`${cls.name} ${varName} = new ${cls.name}();`);
+  selInstId=inst.id;
+  document.getElementById('sim-ph').style.display='none';
+  renderSimCanvas();
+  renderSimDetail();
+}
+
+function deleteInstance(id){
+  instances=instances.filter(i=>i.id!==id);
+  if(selInstId===id)selInstId=instances.length?instances[instances.length-1].id:null;
+  renderSimCanvas();renderSimDetail();
+}
+
+function selectInst(id){selInstId=id;renderSimCanvas();renderSimDetail();}
+
+function renderSimCanvas(){
+  const cv=document.getElementById('sim-canvas');
+  const ph=document.getElementById('sim-ph');
+  if(!instances.length){ph.style.display='flex';cv.querySelectorAll('.inst-card').forEach(e=>e.remove());return;}
+  ph.style.display='none';
+  // remove old cards
+  cv.querySelectorAll('.inst-card').forEach(e=>e.remove());
+  instances.forEach(inst=>{
+    const cls=gR(inst.clsId);if(!cls)return;
+    const cfg=TYPE_CFG[cls.type];
+    const card=document.createElement('div');
+    card.className='inst-card'+(selInstId===inst.id?' active-inst':'');
+    card.onclick=()=>selectInst(inst.id);
+    const attrsHtml=Object.entries(inst.attrVals).map(([k,v])=>{
+      const p=parseAttr(k);
+      return`<div class="inst-attr-row"><span class="inst-attr-key">${p.name}</span><span class="inst-attr-val">= ${v}</span></div>`;
+    }).join('');
+    card.innerHTML=`
+      <div class="inst-head">
+        <div class="inst-badge" style="background:${cfg.hdr}">${cfg.badge}</div>
+        <div class="inst-name-wrap">
+          <div class="inst-varname">${inst.varName}</div>
+          <div class="inst-typename">${cls.name}</div>
+        </div>
+        <span class="inst-del" onclick="event.stopPropagation();deleteInstance(${inst.id})">✕</span>
+      </div>
+      <div class="inst-attrs">${attrsHtml||'<span style="font-size:10px;color:#3C3489">sin atributos</span>'}</div>`;
+    cv.appendChild(card);
+  });
+}
+
+function renderSimDetail(){
+  const el=document.getElementById('sim-detail');
+  if(!selInstId){el.innerHTML='<div class="empty-msg">Clic en un objeto para ver sus detalles y llamar funciones</div>';return;}
+  const inst=instances.find(i=>i.id===selInstId);
+  if(!inst){el.innerHTML='<div class="empty-msg">Objeto no encontrado</div>';return;}
+  const cls=gR(inst.clsId);if(!cls){el.innerHTML='';return;}
+  const cfg=TYPE_CFG[cls.type];
+
+  // cabecera
+  let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid rgba(83,74,183,0.3)">
+    <div style="width:28px;height:28px;border-radius:6px;background:${cfg.hdr};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace">${cfg.badge}</div>
+    <div><div style="font-size:13px;font-weight:600;color:#EEEDFE">${inst.varName}</div><div style="font-size:10px;color:#534AB7;font-family:'JetBrains Mono',monospace">${cls.name}</div></div>
+  </div>`;
+
+  // atributos editables
+  const allAttrs=getAllAttrs(cls);
+  if(allAttrs.length){
+    html+=`<div class="sim-field-label">Atributos</div>`;
+    allAttrs.forEach(a=>{
+      const p=parseAttr(a);
+      const vis=a[0];
+      const col=vis==='-'?'#F09595':vis==='+'?'#85B7EB':'#97C459';
+      const val=inst.attrVals[a]||defaultVal(p.type);
+      html+=`<div style="margin-bottom:6px">
+        <div style="font-size:10px;color:${col};font-family:'JetBrains Mono',monospace;margin-bottom:2px">${a}</div>
+        <input class="prop-input" value="${val.replace(/"/g,'')}"
+          oninput="updateInstAttr(${inst.id},${JSON.stringify(a)},this.value)"
+          style="font-size:12px;padding:4px 7px"/>
+      </div>`;
+    });
+  }
+
+  // generar código del estado actual
+  html+=`<div class="sim-field-label" style="margin-top:14px">Código de creación</div>`;
+  let code=`${cls.name} ${inst.varName} = new ${cls.name}();\n`;
+  Object.entries(inst.attrVals).forEach(([k,v])=>{
+    const p=parseAttr(k);
+    const setter='set'+p.name.charAt(0).toUpperCase()+p.name.slice(1);
+    code+=`${inst.varName}.${setter}(${v});\n`;
+  });
+  html+=`<pre style="background:rgba(0,0,0,0.4);border:1px solid rgba(83,74,183,0.3);border-radius:6px;padding:8px;font-size:10px;color:#CECBF6;font-family:'JetBrains Mono',monospace;line-height:1.6;overflow-x:auto;white-space:pre-wrap">${code}</pre>`;
+  html+=`<button onclick="copySimCode(${JSON.stringify(code)})" style="width:100%;padding:5px;font-size:11px;border-radius:5px;border:1px solid rgba(175,169,236,0.25);background:rgba(175,169,236,0.07);color:#AFA9EC;cursor:pointer;font-family:'Syne',sans-serif;margin-bottom:12px">Copiar código</button>`;
+
+  // funciones llamables
+  const allFuncs=getAllFuncs(cls);
+  const llamables=allFuncs.filter(f=>f[0]==='+');
+  if(llamables.length){
+    html+=`<div class="sim-field-label">Llamar función</div>`;
+    llamables.forEach(f=>{
+      const fp=parseFunc(f);
+      const paramInputs=fp.params.map((p,i)=>
+        `<input class="prop-input" id="fp_${inst.id}_${fp.name}_${i}" placeholder="${p||'param'}" style="margin-top:3px;padding:4px 7px;font-size:11px"/>`
+      ).join('');
+      html+=`<div style="margin-bottom:8px;background:rgba(0,0,0,0.25);border-radius:6px;border:1px solid rgba(83,74,183,0.15);overflow:hidden">
+        <div style="padding:6px 10px;font-size:11px;color:#85B7EB;font-family:'JetBrains Mono',monospace;border-bottom:1px solid rgba(83,74,183,0.1)">${f}</div>
+        ${paramInputs?`<div style="padding:6px 10px">${paramInputs}</div>`:''}
+        <div style="padding:4px 10px 8px">
+          <button onclick="callFunc(${inst.id},${JSON.stringify(f)})" style="width:100%;padding:5px 10px;font-size:11px;border-radius:5px;border:none;background:#534AB7;color:#fff;cursor:pointer;font-family:'Syne',sans-serif;font-weight:500">▶ Ejecutar</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  el.innerHTML=html;
+}
+
+function updateInstAttr(instId,attrKey,val){
+  const inst=instances.find(i=>i.id===instId);if(!inst)return;
+  inst.attrVals[attrKey]=val;
+  renderSimCanvas();
+}
+
+function callFunc(instId, funcStr){
+  const inst=instances.find(i=>i.id===instId);if(!inst)return;
+  const cls=gR(inst.clsId);if(!cls)return;
+  const fp=parseFunc(funcStr);
+
+  // recolectar params de los inputs
+  const paramVals=fp.params.map((_,i)=>{
+    const inp=document.getElementById(`fp_${instId}_${fp.name}_${i}`);
+    return inp?inp.value||'""':'""';
+  });
+
+  const callCode=`${inst.varName}.${fp.name}(${paramVals.join(', ')});`;
+  simLog('call','▶ '+callCode);
+
+  const ret=simulateReturn(fp,inst,cls);
+  if(fp.returnType.toLowerCase()==='void'){
+    simLog('result',`✓ ${fp.name}() ejecutado (void)`);
+  } else {
+    simLog('result',`← retorna: ${ret}`);
+    simLog('info',`// ${fp.returnType} resultado = ${ret}`);
+  }
+}
+
+function copySimCode(code){
+  navigator.clipboard.writeText(code).then(()=>showToast('✓ Código copiado'));
+}
+
+function simLog(type, msg){
+  const log=document.getElementById('sim-log');
+  const ts=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const div=document.createElement('div');
+  div.className='log-line log-'+type;
+  div.innerHTML=`<span class="log-ts">[${ts}]</span>${msg}`;
+  log.appendChild(div);
+  log.scrollTop=log.scrollHeight;
+}
+
+function clearLog(){document.getElementById('sim-log').innerHTML='';}
+</script>
+</body>
+</html>
